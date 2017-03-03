@@ -3,6 +3,11 @@
 import groovy.transform.Field
 import groovy.json.*
 
+@Field final ORGANIZATION = "wiredlabs";
+@Field final JIRA_API_ENDPOINT   = "http://localhost:8081/rest/api/2"
+@Field final GITHUB_API_ENDPOINT = "https://api.github.com/orgs/${ORGANIZATION}/"
+@Field final CREDENTIALS_ID = "githubCredentials";
+
 properties([disableConcurrentBuilds(),
 	[$class: 'ParametersDefinitionProperty', 
 		parameterDefinitions: [
@@ -20,19 +25,32 @@ properties([disableConcurrentBuilds(),
 				name: 'ProjectDescription'],
 			[[$class: 'ExtensibleChoiceParameterDefinition', 
 				choiceListProvider: [$class: 'SystemGroovyChoiceListProvider', 
-					scriptText: new File('listJiraUsers.groovy').text, 
 					usePredefinedVariables: false], 
 					description: 'Choose the jira user that will lead the project', 
 					editable: false, 
-					name: 'TeamLeader']]
+					name: 'TeamLeader'],
+					scriptText: """
+import groovy.json.JsonSlurper;
+import java.net.URL;
+import java.util.Base64;
+
+final user = "build";
+final password = "build";
+//final JIRA_ENDPOINT = "http://10.42.11.231:8081/rest/api/latest";
+final JIRA_ENDPOINT = "https://jira.objective.com.br/rest/api/latest";
+final wildcard = "%"; // latest jira is .
+
+auth = Base64.getEncoder().encodeToString((user + ":" + password).getBytes());
+
+users = new JsonSlurper().parseText(new URL("\${JIRA_ENDPOINT}/user/search?startAt=0&maxResults=1000&username=\${wildcard}").getText(requestProperties: ['Authorization': "Basic \${auth}"]))
+
+return users.collect{"\${it.displayName} (\${it.key})"} 
+					"""
+					]
 		]
 	]   
 ])
 
-@Field final ORGANIZATION = "wiredlabs";
-@Field final JIRA_API_ENDPOINT   = "http://localhost:8081/rest/api/2"
-@Field final GITHUB_API_ENDPOINT = "https://api.github.com/orgs/${ORGANIZATION}/"
-@Field final CREDENTIALS_ID = "githubCredentials";
 
 def main()
 {
