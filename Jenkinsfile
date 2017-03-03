@@ -63,10 +63,7 @@ def main()
 //	createDashingConfiguration();
 }
 
-import groovy.json.JsonSlurper;
-import java.net.URL;
-import java.util.Base64;
-
+def createGithubProject(leaderMail, jiraProjectName, githubProjectName, description)
 {
 	def repoName = createGithubRepo(githubProjectName, description);
 
