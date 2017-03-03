@@ -12,4 +12,4 @@ auth = Base64.getEncoder().encodeToString((user + ":" + password).getBytes());
 
 users = new JsonSlurper().parseText(new URL("${JIRA_ENDPOINT}/user/search?startAt=0&maxResults=1000&username=${wildcard}").getText(requestProperties: ['Authorization': "Basic ${auth}"]))
 
-return users.collect{"${it.displayName} (${it.key})"} 
+println users.collect{"${it.displayName} (${it.key})"} 
