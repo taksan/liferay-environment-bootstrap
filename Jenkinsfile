@@ -23,12 +23,12 @@ properties([disableConcurrentBuilds(),
 			[$class: 'StringParameterDefinition', 
 				description: 'Project Description', 
 				name: 'ProjectDescription'],
-			[[$class: 'ExtensibleChoiceParameterDefinition', 
+			[$class: 'ExtensibleChoiceParameterDefinition', 
 				choiceListProvider: [$class: 'SystemGroovyChoiceListProvider', 
 					usePredefinedVariables: false], 
 					description: 'Choose the jira user that will lead the project', 
 					editable: false, 
-					name: 'TeamLeader'],
+					name: 'TeamLeader',
 					scriptText: """
 import groovy.json.JsonSlurper;
 import java.net.URL;
@@ -46,7 +46,7 @@ users = new JsonSlurper().parseText(new URL("\${JIRA_ENDPOINT}/user/search?start
 
 return users.collect{"\${it.displayName} (\${it.key})"} 
 					"""
-					]
+					]]
 		]
 	]   
 ])
