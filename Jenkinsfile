@@ -46,10 +46,10 @@ users = new JsonSlurper().parseText(new URL("\${JIRA_ENDPOINT}/user/search?start
 
 return users.collect{"\${it.displayName} (\${it.key})"} 
 					"""
-					]]
+					]
+			]
 		]
-	]   
-])
+	])
 
 
 def main()
