@@ -4,22 +4,29 @@ import groovy.transform.Field
 import groovy.json.*
 
 properties([disableConcurrentBuilds(),
-    [$class: 'ParametersDefinitionProperty', 
-        parameterDefinitions: [
-            [$class: 'StringParameterDefinition', 
-                description: 'Jira key for the project', 
-                name : 'JiraKey'], 
-            [$class: 'StringParameterDefinition', 
-                description: 'Project name', 
-                name : 'JiraProjectName'], 
-            [$class: 'StringParameterDefinition', 
-                description: 'Github Repo Name', 
-                name: 'GithubRepoName'], 
-            [$class: 'StringParameterDefinition', 
-                description: 'Project Description', 
-                name: 'ProjectDescription'] 
-        ]
-    ]   
+	[$class: 'ParametersDefinitionProperty', 
+		parameterDefinitions: [
+			[$class: 'StringParameterDefinition', 
+				description: 'Jira key for the project', 
+				name : 'JiraKey'], 
+			[$class: 'StringParameterDefinition', 
+				description: 'Project name', 
+				name : 'JiraProjectName'], 
+			[$class: 'StringParameterDefinition', 
+				description: 'Github Repo Name', 
+				name: 'GithubRepoName'], 
+			[$class: 'StringParameterDefinition', 
+				description: 'Project Description', 
+				name: 'ProjectDescription'],
+			[[$class: 'ExtensibleChoiceParameterDefinition', 
+				choiceListProvider: [$class: 'SystemGroovyChoiceListProvider', 
+					scriptText: new File('listJiraUsers.groovy').text, 
+					usePredefinedVariables: false], 
+					description: 'Choose the jira user that will lead the project', 
+					editable: false, 
+					name: 'TeamLeader']]
+		]
+	]   
 ])
 
 @Field final ORGANIZATION = "wiredlabs";
@@ -54,8 +61,8 @@ def createGithubProject(leaderMail, jiraProjectName, githubProjectName, descript
 
 	File buildGradle = new File(projDir, "build.gradle");
 	buildGradle << updateTemplateVariables("build.gradle.tpl", [
-		_JIRA_PROJECT_NAME_     : jiraProjectName,
-		_GITHUB_REPOSITORY_NAME_: githubProjectName
+		_JIRA_PROJECT_NAME_      : jiraProjectName,
+		_GITHUB_REPOSITORY_NAME_ : githubProjectName
 	]);
 
 	push(repoName, projDir);
@@ -66,10 +73,10 @@ def createJiraProject(jiraKey, jiraName, description, lead)
 {
 	def req=[
 		key                     : jiraKey,
-		name                    : jiraName,
+		name					: jiraName,
 		projectTypeKey          : "business",
 		projectTemplateKey      : "com.atlassian.jira-core-project-templates:jira-core-project-management",
-		description             : description,
+		description	            : description,
 		lead                    : lead,
 		assigneeType            : "PROJECT_LEAD",
 		issueTypeScheme         : "19882",
@@ -86,7 +93,7 @@ def createJiraProject(jiraKey, jiraName, description, lead)
 def createGithubRepo(githubProjectName, description)
 {
 	def req = [
-	  name        : githubProjectName,
+	  name	      : githubProjectName,
 	  description : description,
 	  private     : false,
 	  has_issues  : true,
@@ -114,13 +121,13 @@ def execCmd(args){
 
 def clone(repo, dir) {
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]) {
-    	execCmd("git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@:github.com/${repo}.git ${dir.name}")
+		execCmd("git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@:github.com/${repo}.git ${dir.name}")
 	}
 }
 
 def push(repo, dir) {
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]) {
-    	execCmd("cd ${dir.name} && git push https://${GIT_USERNAME}:${GIT_PASSWORD}@:github.com/${repo}.git")
+		execCmd("cd ${dir.name} && git push https://${GIT_USERNAME}:${GIT_PASSWORD}@:github.com/${repo}.git")
 	}
 }
 
