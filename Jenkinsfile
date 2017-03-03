@@ -131,4 +131,8 @@ def push(repo, dir) {
 	}
 }
 
-main()
+node {
+	stage("main") {
+		main()
+	}
+}
