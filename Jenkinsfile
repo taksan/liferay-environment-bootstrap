@@ -25,7 +25,7 @@ properties([disableConcurrentBuilds(),
 				name: 'ProjectDescription'],
 			[$class: 'ExtensibleChoiceParameterDefinition', 
 				choiceListProvider: [$class: 'SystemGroovyChoiceListProvider', 
-					usePredefinedVariables: false,
+					usePredefinedVariables: true,
 					scriptText: """
 						import groovy.json.JsonSlurper;
 						import java.net.URL;
