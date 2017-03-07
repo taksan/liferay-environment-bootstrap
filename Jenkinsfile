@@ -79,7 +79,7 @@ def createGithubProject(leaderMail, jiraProjectName, githubProjectName, descript
 
 def createJiraProject(jiraKey, jiraName, description, lead)
 {
-	lead = lead.split("\\|")[0];
+	lead = lead.split("\\|")[0].trim();
 	def req=[
 		key                      : jiraKey,
 		name					 : jiraName,
@@ -113,7 +113,7 @@ def createJiraProject(jiraKey, jiraName, description, lead)
 		println "Could not create jira project. The request was:"
 		println json
 		println "The response was:"
-		println new JsonSlurper().parseText(response.content).errors;
+		println response;
 		throw e;
 	}
 }
