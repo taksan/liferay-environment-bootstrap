@@ -4,7 +4,7 @@ import groovy.transform.Field
 import groovy.json.*
 
 @Field final ORGANIZATION = "wiredlabs";
-@Field final JIRA_API_ENDPOINT   = "http://localhost:8081/rest/api/2"
+@Field final JIRA_REST_ENDPOINT   = "http://localhost:8081/rest/"
 @Field final GITHUB_API_ENDPOINT = "https://api.github.com/orgs/${ORGANIZATION}/"
 @Field final CREDENTIALS_ID = "githubCredentials";
 
@@ -90,22 +90,32 @@ def createGithubProject(leaderMail, jiraProjectName, githubProjectName, descript
 def createJiraProject(jiraKey, jiraName, description, lead)
 {
 	def req=[
-		key                     : jiraKey,
-		name					: jiraName,
-		projectTypeKey          : "business",
-		projectTemplateKey      : "com.atlassian.jira-core-project-templates:jira-core-project-management",
-		description	            : description,
-		lead                    : lead,
+		key                      : jiraKey,
+		name					 : jiraName,
+		description	             : description,
+		projectTypeKey           : "business",
+		projectTemplateKey       : "com.atlassian.jira-core-project-templates:jira-core-project-management",
+		lead                     : lead,
+		issueTypeScheme          : 10100,
+		workflowScheme           : 10100,
+		issueTypeScreenScheme    : 10000,
+		fieldConfigurationScheme : 10000,
+		notificationScheme       : 10100,
+		permissionScheme         : 10000,
+		customFields             : [10000]
+/*
 		assigneeType            : "PROJECT_LEAD",
 		issueTypeScheme         : "19882",
 		workflowScheme          : "17180",
 		issueTypeScreenScheme   : "14450",
 		fieldConfigurationScheme: "13600",
 		permissionScheme        : "11770",
-		notificationScheme      : "13250"
+		notificationScheme      : "13250",
+		customFields            : [ 17737, 18629, 18624, 18521, 18522, 18523, 18626, 18623, 18620, 18625, 18635, 18642, 18627, 18630, 18520, 18621, 18622 ]
+*/
 	]
 	def json = new JsonBuilder(req).toPrettyString()
-	httpRequest acceptType: 'APPLICATION_JSON', authentication: jiraAuthentication, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${JIRA_API_ENDPOINT}/project"
+	httpRequest acceptType: 'APPLICATION_JSON', authentication: jiraAuthentication, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${JIRA_REST_ENDPOINT}/projectbuilder/1.0/project"
 }
 
 def createGithubRepo(githubProjectName, description)
