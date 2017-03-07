@@ -53,6 +53,17 @@ properties([disableConcurrentBuilds(),
 
 def main()
 {
+	try {
+		println "JiraKey = $JiraKey"
+		println "JiraProjectName = $JiraProjectName"
+		println "GithubRepoName = $GithubRepoName"
+		println "ProjectDescription = $ProjectDescription"
+		println "TeamLeader = $TeamLeader"
+	}
+	catch (MissingPropertyException e) {
+		println "Some of the parameters are missing. It might be due to obsolete JenkinsFile. Retry your build"
+		return;
+	}  
 	def repoName = createGithubProject(TeamLeader, JiraKey, GithubRepoName, ProjectDescription);
 
 	createJiraProject(JiraKey, GithubRepoName, ProjectDescription, TeamLeader);
