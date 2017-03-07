@@ -4,7 +4,7 @@ import groovy.transform.Field
 import groovy.json.*
 
 @Field final ORGANIZATION = "wiredlabs";
-@Field final GITHUB_API_ENDPOINT = "https://api.github.com/orgs/${ORGANIZATION}/"
+@Field final GITHUB_API_ENDPOINT = "https://api.github.com/orgs/${ORGANIZATION}"
 @Field final GITHUB_CREDENTIALS_ID = "githubCredentials";
 @Field final JIRA_CREDENTIALS_ID = "jiraCredentials";
 
@@ -33,7 +33,7 @@ properties([disableConcurrentBuilds(),
 
 						final user = "admin";
 						final password = "admin";
-						final JIRA_ENDPOINT = jenkins.getGlobalNodeProperties()[0].getEnvVars().get("JIRA_REST_ENDPOINT")+"api/latest";
+						final JIRA_ENDPOINT = jenkins.getGlobalNodeProperties()[0].getEnvVars().get("JIRA_REST_ENDPOINT")+"/api/latest";
 						final wildcard = "."; // latest jira is .
 
 						auth = Base64.getEncoder().encodeToString((user + ":" + password).getBytes());
