@@ -76,9 +76,10 @@ def main()
 def createGithubProject(leaderMail, jiraProjectName, githubProjectName, description)
 {
 	def repoName = createGithubRepo(githubProjectName, description);
+	def fullRepoName = "${ORGANIZATION}/$repoName"
 
 	File projDir = new File("proj");
-	clone (repoName, projDir);
+	clone (fullRepoName, projDir);
 	File jenkinsFile = new File(projDir, "Jenkinsfile");
 	jenkinsFile << updateTemplateVariables("Jenkinsfile.tpl", [
 		_JIRA_PROJECT_NAME_      : jiraProjectName,
@@ -93,7 +94,7 @@ def createGithubProject(leaderMail, jiraProjectName, githubProjectName, descript
 		_GITHUB_REPOSITORY_NAME_ : githubProjectName
 	]);
 
-	push(repoName, projDir);
+	push(fullRepoName, projDir);
 }
 
 
