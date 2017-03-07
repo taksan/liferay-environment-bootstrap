@@ -83,7 +83,6 @@ def createGithubProject(leaderMail, jiraProjectName, githubProjectName, descript
 
 	clone (fullRepoName, projDir);
 	File jenkinsFile = new File(projDir, "Jenkinsfile");
-	sh "ls -l"
 	jenkinsFile << updateTemplateVariables("Jenkinsfile.tpl", [
 		_JIRA_PROJECT_NAME_      : jiraProjectName,
 		_GITHUB_REPOSITORY_NAME_ : repoName,
@@ -149,6 +148,7 @@ def createGithubRepo(githubProjectName, description)
 
 def updateTemplateVariables(templateName, varMap)
 {
+	println new File(".").absolutePath
 	def txt = new File(templateName).text;
 	for (e in varMap) {
 		txt = txt.replace("#{"+e.key+"}", e.value);
