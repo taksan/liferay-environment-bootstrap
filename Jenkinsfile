@@ -162,7 +162,6 @@ def execCmd(args){
 def clone(repo, dir) {
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: GITHUB_CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]) {
 		execCmd("git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${repo}.git ${dir.name}")
-		execCmd("cd ${dir.name} && git remote add origin https://github.com/${repo}.git")
 	}
 }
 
