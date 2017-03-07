@@ -154,7 +154,7 @@ def updateTemplateVariables(templateName, varMap)
 }
 
 def execCmd(args){
-	println args.execute().getText();
+	sh args
 }
 
 def clone(repo, dir) {
