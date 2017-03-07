@@ -83,6 +83,7 @@ def createGithubProject(leaderMail, jiraProjectName, githubProjectName, descript
 
 	clone (fullRepoName, projDir);
 	File jenkinsFile = new File(projDir, "Jenkinsfile");
+	sh "ls -l"
 	jenkinsFile << updateTemplateVariables("Jenkinsfile.tpl", [
 		_JIRA_PROJECT_NAME_      : jiraProjectName,
 		_GITHUB_REPOSITORY_NAME_ : repoName,
