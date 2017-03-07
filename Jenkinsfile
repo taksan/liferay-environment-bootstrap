@@ -27,20 +27,20 @@ properties([disableConcurrentBuilds(),
 				choiceListProvider: [$class: 'SystemGroovyChoiceListProvider', 
 					usePredefinedVariables: false,
 					scriptText: """
-import groovy.json.JsonSlurper;
-import java.net.URL;
-import java.util.Base64;
+						import groovy.json.JsonSlurper;
+						import java.net.URL;
+						import java.util.Base64;
 
-final user = "build";
-final password = "build";
-//final JIRA_ENDPOINT = "http://10.42.11.231:8081/rest/api/latest";
-final JIRA_ENDPOINT = "https://jira.objective.com.br/rest/api/latest";
-final wildcard = "%"; // latest jira is .
+						final user = "build";
+						final password = "build";
+						//final JIRA_ENDPOINT = "http://10.42.11.231:8081/rest/api/latest";
+						final JIRA_ENDPOINT = "$JIRA_REST_ENDPOINT/api/latest";
+						final wildcard = "%"; // latest jira is .
 
-auth = Base64.getEncoder().encodeToString((user + ":" + password).getBytes());
-users = new JsonSlurper().parseText(new URL("\${JIRA_ENDPOINT}/user/search?startAt=0&maxResults=1000&username=\${wildcard}").getText(requestProperties: ['Authorization': "Basic \${auth}"]))
+						auth = Base64.getEncoder().encodeToString((user + ":" + password).getBytes());
+						users = new JsonSlurper().parseText(new URL("\${JIRA_ENDPOINT}/user/search?startAt=0&maxResults=1000&username=\${wildcard}").getText(requestProperties: ['Authorization': "Basic \${auth}"]))
 
-return users.collect{"\${it.displayName} (\${it.key})"} 
+						return users.collect{"\${it.displayName} (\${it.key})"} 
 					"""
 					], 
 					description: 'Choose the jira user that will lead the project', 
