@@ -4,7 +4,6 @@ import groovy.transform.Field
 import groovy.json.*
 
 @Field final ORGANIZATION = "wiredlabs";
-@Field final JIRA_REST_ENDPOINT   = "http://localhost:8081/rest/"
 @Field final GITHUB_API_ENDPOINT = "https://api.github.com/orgs/${ORGANIZATION}/"
 @Field final GITHUB_CREDENTIALS_ID = "githubCredentials";
 @Field final CREDENTIALS_ID = "githubCredentials";
@@ -35,7 +34,6 @@ properties([disableConcurrentBuilds(),
 
 						final user = "admin";
 						final password = "admin";
-						//final JIRA_ENDPOINT = "http://10.42.11.231:8081/rest/api/latest";
 						final JIRA_ENDPOINT = "$JIRA_REST_ENDPOINT/api/latest";
 						final wildcard = "."; // latest jira is .
 
