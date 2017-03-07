@@ -166,7 +166,7 @@ def clone(repo, dir) {
 }
 
 def push(dir) {
-	execCmd("cd ${dir.name} && git add * && git commit -m 'Project setup' && git push origin master")
+	execCmd("cd ${dir.name} && git add * && git -c 'user.name=autocreator' -c 'user.email=autocreator@nomail' commit -m 'Project setup' && git push origin master")
 }
 
 node {
