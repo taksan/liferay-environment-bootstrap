@@ -105,7 +105,7 @@ def createJiraProject(jiraKey, jiraName, description, lead)
 		key                      : jiraKey,
 		name					 : jiraName,
 		description	             : description,
-		projectTypeKey           : "business",
+		type                     : "business",
 		projectTemplateKey       : "com.atlassian.jira-core-project-templates:jira-core-project-management",
 		lead                     : lead,
 		issueTypeScheme          : 10100,
