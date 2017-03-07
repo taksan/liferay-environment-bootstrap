@@ -51,9 +51,12 @@ properties([disableConcurrentBuilds(),
 	]
 ])
 
-def createGithubProject(leaderMail, jiraProjectName, githubProjectName, description)
+def createGithubProject(leaderMail, jiraProjectName, repoName, description)
 {
-	def repoName = createGithubRepo(githubProjectName, description);
+	def created = createGithubRepo(repoName, description);
+	if (!created)
+		return;
+
 	def fullRepoName = "${ORGANIZATION}/$repoName"
 
 	File projDir = new File(workspace, "proj");
@@ -84,7 +87,7 @@ def createJiraProject(jiraKey, jiraName, description, lead)
 		key                      : jiraKey,
 		name					 : jiraName,
 		description	             : description,
-		type                     : "business",
+		projectTypeKey           : "business",
 		projectTemplateKey       : "com.atlassian.jira-core-project-templates:jira-core-project-management",
 		lead                     : lead,
 		issueTypeScheme          : 10100,
@@ -124,11 +127,12 @@ def createGithubRepo(githubProjectName, description)
 		response = httpRequest acceptType: 'APPLICATION_JSON', authentication: GITHUB_CREDENTIALS_ID, url: "${GITHUB_REPOS_API_ENDPOINT}/${githubProjectName}"
 		if (response.status == 200) {
 			println "Github repo ${githubProjectName} already exists"
-			return githubProjectName
+			return false;
 		}
 	} catch(Exception e) {
 		// probably means the project doesn't exist, move on
 	}
+
 	def req = [
 	  name	      : githubProjectName,
 	  description : description,
@@ -146,10 +150,9 @@ def createGithubRepo(githubProjectName, description)
 		println "The response was:"
 		println response.content
 		throw e;
-	
 	}
 
-	return req.name;
+	return true;
 }
 
 def updateTemplateVariables(templateName, varMap)
