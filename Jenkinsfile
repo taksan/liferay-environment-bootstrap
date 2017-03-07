@@ -159,13 +159,13 @@ def execCmd(args){
 
 def clone(repo, dir) {
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: GITHUB_CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]) {
-		execCmd("git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@:github.com/${repo}.git ${dir.name}")
+		execCmd("git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${repo}.git ${dir.name}")
 	}
 }
 
 def push(repo, dir) {
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]) {
-		execCmd("cd ${dir.name} && git push https://${GIT_USERNAME}:${GIT_PASSWORD}@:github.com/${repo}.git")
+		execCmd("cd ${dir.name} && git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${repo}.git")
 	}
 }
 
