@@ -93,8 +93,7 @@ def createGithubProject(leaderMail, jiraProjectName, githubProjectName, descript
 		_JIRA_PROJECT_NAME_      : jiraProjectName,
 		_GITHUB_REPOSITORY_NAME_ : githubProjectName
 	]);
-
-	push(fullRepoName, projDir);
+	push(projDir);
 }
 
 
@@ -161,13 +160,12 @@ def execCmd(args){
 def clone(repo, dir) {
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: GITHUB_CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]) {
 		execCmd("git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${repo}.git ${dir.name}")
+		execCmd("cd ${dir.name} && git remote add origin https://github.com/${repo}.git")
 	}
 }
 
-def push(repo, dir) {
-	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]) {
-		execCmd("cd ${dir.name} && git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${repo}.git")
-	}
+def push(dir) {
+	execCmd("cd ${dir.name} && git add * && git commit -m 'Project setup' && git push origin master")
 }
 
 node {
