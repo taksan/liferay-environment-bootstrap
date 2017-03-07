@@ -5,6 +5,7 @@ import groovy.json.*
 
 @Field final ORGANIZATION = "wiredlabs";
 @Field final GITHUB_API_ENDPOINT = "https://api.github.com/orgs/${ORGANIZATION}"
+@Field final GITHUB_REPOS_API_ENDPOINT = "https://api.github.com/repos/${ORGANIZATION}"
 @Field final GITHUB_CREDENTIALS_ID = "githubCredentials";
 @Field final JIRA_CREDENTIALS_ID = "jiraCredentials";
 
@@ -120,10 +121,10 @@ def createJiraProject(jiraKey, jiraName, description, lead)
 def createGithubRepo(githubProjectName, description)
 {
 	try {
-		response = httpRequest acceptType: 'APPLICATION_JSON', authentication: GITHUB_CREDENTIALS_ID, url: "${GITHUB_API_ENDPOINT}/repos"
+		response = httpRequest acceptType: 'APPLICATION_JSON', authentication: GITHUB_CREDENTIALS_ID, url: "${GITHUB_REPOS_API_ENDPOINT}/${githubProjectName}"
 		if (response.status == 200) {
-			println "Github project already exists"
-			return
+			println "Github repo ${githubProjectName} already exists"
+			return githubProjectName
 		}
 	} catch(Exception e) {
 		// probably means the project doesn't exist, move on
