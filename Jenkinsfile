@@ -127,6 +127,7 @@ def createJiraProject(jiraKey, jiraName, description, lead)
 */
 	]
 	def json = new JsonBuilder(req).toPrettyString()
+	println json
 	httpRequest acceptType: 'APPLICATION_JSON', authentication: JIRA_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${JIRA_REST_ENDPOINT}/projectbuilder/1.0/project"
 }
 
