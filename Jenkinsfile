@@ -78,7 +78,7 @@ def createGithubProject(leaderMail, jiraProjectName, githubProjectName, descript
 	def repoName = createGithubRepo(githubProjectName, description);
 	def fullRepoName = "${ORGANIZATION}/$repoName"
 
-	File projDir = new File("proj");
+	File projDir = new File(workspace, "proj");
 	execCmd("rm -rf proj")
 
 	clone (fullRepoName, projDir);
@@ -148,8 +148,7 @@ def createGithubRepo(githubProjectName, description)
 
 def updateTemplateVariables(templateName, varMap)
 {
-	println new File(".").absolutePath
-	def txt = new File(templateName).text;
+	def txt = new File(workspace, templateName).text;
 	for (e in varMap) {
 		txt = txt.replace("#{"+e.key+"}", e.value);
 	}
