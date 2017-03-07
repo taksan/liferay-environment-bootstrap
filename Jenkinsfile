@@ -6,8 +6,7 @@ import groovy.json.*
 @Field final ORGANIZATION = "wiredlabs";
 @Field final GITHUB_API_ENDPOINT = "https://api.github.com/orgs/${ORGANIZATION}/"
 @Field final GITHUB_CREDENTIALS_ID = "githubCredentials";
-@Field final CREDENTIALS_ID = "githubCredentials";
-@Field final CREDENTIALS_ID = "jiraCredentials";
+@Field final JIRA_CREDENTIALS_ID = "jiraCredentials";
 
 properties([disableConcurrentBuilds(),
 	[$class: 'ParametersDefinitionProperty', 
