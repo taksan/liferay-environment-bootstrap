@@ -33,7 +33,7 @@ properties([disableConcurrentBuilds(),
 
 						final user = "admin";
 						final password = "admin";
-						final JIRA_ENDPOINT = "${env.JIRA_REST_ENDPOINT}/api/latest";
+						final JIRA_ENDPOINT = "\${env.JIRA_REST_ENDPOINT}/api/latest";
 						final wildcard = "."; // latest jira is .
 
 						auth = Base64.getEncoder().encodeToString((user + ":" + password).getBytes());
