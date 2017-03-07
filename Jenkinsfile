@@ -79,8 +79,7 @@ def createGithubProject(leaderMail, jiraProjectName, githubProjectName, descript
 	def fullRepoName = "${ORGANIZATION}/$repoName"
 
 	File projDir = new File("proj");
-	if (projDir.exists())
-		execCmd("rm -rf proj")
+	execCmd("rm -rf proj")
 
 	clone (fullRepoName, projDir);
 	File jenkinsFile = new File(projDir, "Jenkinsfile");
