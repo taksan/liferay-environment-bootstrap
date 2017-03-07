@@ -6,7 +6,9 @@ import groovy.json.*
 @Field final ORGANIZATION = "wiredlabs";
 @Field final JIRA_REST_ENDPOINT   = "http://localhost:8081/rest/"
 @Field final GITHUB_API_ENDPOINT = "https://api.github.com/orgs/${ORGANIZATION}/"
+@Field final GITHUB_CREDENTIALS_ID = "githubCredentials";
 @Field final CREDENTIALS_ID = "githubCredentials";
+@Field final CREDENTIALS_ID = "jiraCredentials";
 
 properties([disableConcurrentBuilds(),
 	[$class: 'ParametersDefinitionProperty', 
@@ -18,7 +20,7 @@ properties([disableConcurrentBuilds(),
 				description: 'Project name', 
 				name : 'JiraProjectName'], 
 			[$class: 'StringParameterDefinition', 
-				description: 'Github Repo Name', 
+				description: "Github Repo Name. The repo will become github.com/${ORGANIZATION}/<given name>", 
 				name: 'GithubRepoName'], 
 			[$class: 'StringParameterDefinition', 
 				description: 'Project Description', 
@@ -31,11 +33,11 @@ properties([disableConcurrentBuilds(),
 						import java.net.URL;
 						import java.util.Base64;
 
-						final user = "build";
-						final password = "build";
+						final user = "admin";
+						final password = "admin";
 						//final JIRA_ENDPOINT = "http://10.42.11.231:8081/rest/api/latest";
 						final JIRA_ENDPOINT = "$JIRA_REST_ENDPOINT/api/latest";
-						final wildcard = "%"; // latest jira is .
+						final wildcard = "."; // latest jira is .
 
 						auth = Base64.getEncoder().encodeToString((user + ":" + password).getBytes());
 						users = new JsonSlurper().parseText(new URL("\${JIRA_ENDPOINT}/user/search?startAt=0&maxResults=1000&username=\${wildcard}").getText(requestProperties: ['Authorization': "Basic \${auth}"]))
@@ -115,7 +117,7 @@ def createJiraProject(jiraKey, jiraName, description, lead)
 */
 	]
 	def json = new JsonBuilder(req).toPrettyString()
-	httpRequest acceptType: 'APPLICATION_JSON', authentication: jiraAuthentication, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${JIRA_REST_ENDPOINT}/projectbuilder/1.0/project"
+	httpRequest acceptType: 'APPLICATION_JSON', authentication: JIRA_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${JIRA_REST_ENDPOINT}/projectbuilder/1.0/project"
 }
 
 def createGithubRepo(githubProjectName, description)
@@ -129,7 +131,7 @@ def createGithubRepo(githubProjectName, description)
 	]
 
 	def json = new JsonBuilder(req).toPrettyString()
-	httpRequest acceptType: 'APPLICATION_JSON', authentication: githubAuthentication, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${GITHUB_API_ENDPOINT}/repos"
+	httpRequest acceptType: 'APPLICATION_JSON', authentication: GITHUB_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${GITHUB_API_ENDPOINT}/repos"
 
 	return req.name;
 }
