@@ -39,7 +39,7 @@ properties([disableConcurrentBuilds(),
 						auth = Base64.getEncoder().encodeToString((user + ":" + password).getBytes());
 						users = new JsonSlurper().parseText(new URL("\${JIRA_ENDPOINT}/user/search?startAt=0&maxResults=1000&username=\${wildcard}").getText(requestProperties: ['Authorization': "Basic \${auth}"]))
 
-						return users.collect{"\${it.displayName} (\${it.key})"} 
+						return users.collect{"\${it.key} | \${it.displayName} "} 
 					"""
 					], 
 					description: 'Choose the jira user that will lead the project', 
@@ -49,29 +49,6 @@ properties([disableConcurrentBuilds(),
 		]
 	]
 ])
-
-
-def main()
-{
-	try {
-		println "JiraKey = $JiraKey"
-		println "JiraProjectName = $JiraProjectName"
-		println "GithubRepoName = $GithubRepoName"
-		println "ProjectDescription = $ProjectDescription"
-		println "TeamLeader = $TeamLeader"
-	}
-	catch (MissingPropertyException e) {
-		println "Some of the parameters are missing. It might be due to obsolete JenkinsFile. Retry your build"
-		return;
-	}  
-	def repoName = createGithubProject(TeamLeader, JiraKey, GithubRepoName, ProjectDescription);
-
-	createJiraProject(JiraKey, GithubRepoName, ProjectDescription, TeamLeader);
-
-//	createProjectInTaskboard();
-
-//	createDashingConfiguration();
-}
 
 def createGithubProject(leaderMail, jiraProjectName, githubProjectName, description)
 {
@@ -101,6 +78,7 @@ def createGithubProject(leaderMail, jiraProjectName, githubProjectName, descript
 
 def createJiraProject(jiraKey, jiraName, description, lead)
 {
+	lead = lead.split("\\|")[0];
 	def req=[
 		key                      : jiraKey,
 		name					 : jiraName,
@@ -127,12 +105,29 @@ def createJiraProject(jiraKey, jiraName, description, lead)
 */
 	]
 	def json = new JsonBuilder(req).toPrettyString()
-	println json
-	httpRequest acceptType: 'APPLICATION_JSON', authentication: JIRA_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${JIRA_REST_ENDPOINT}/projectbuilder/1.0/project"
+	def response;
+	try {
+		response = httpRequest acceptType: 'APPLICATION_JSON', authentication: JIRA_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${JIRA_REST_ENDPOINT}/projectbuilder/1.0/project"
+	}catch(Exception e) {
+		println "Could not create jira project. The request was:"
+		println json
+		println "The response was:"
+		println new JsonSlurper().parseText(response.content).errors;
+		throw e;
+	}
 }
 
 def createGithubRepo(githubProjectName, description)
 {
+	try {
+		response = httpRequest acceptType: 'APPLICATION_JSON', authentication: GITHUB_CREDENTIALS_ID, url: "${GITHUB_API_ENDPOINT}/repos"
+		if (response.status == 200) {
+			println "Github project already exists"
+			return
+		}
+	} catch(Exception e) {
+		// probably means the project doesn't exist, move on
+	}
 	def req = [
 	  name	      : githubProjectName,
 	  description : description,
@@ -142,7 +137,16 @@ def createGithubRepo(githubProjectName, description)
 	]
 
 	def json = new JsonBuilder(req).toPrettyString()
-	httpRequest acceptType: 'APPLICATION_JSON', authentication: GITHUB_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${GITHUB_API_ENDPOINT}/repos"
+	try {
+		response = httpRequest acceptType: 'APPLICATION_JSON', authentication: GITHUB_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${GITHUB_API_ENDPOINT}/repos"
+	}catch(Exception e) {
+		println "Could not create github project. The request was:"
+		println json
+		println "The response was:"
+		println response.content
+		throw e;
+	
+	}
 
 	return req.name;
 }
@@ -175,7 +179,30 @@ node {
 		checkout scm
 	}
 
-	stage("main") {
-		main()
+	stage("Parameter existence validation") {
+		try {
+			println "JiraKey = $JiraKey"
+			println "JiraProjectName = $JiraProjectName"
+			println "GithubRepoName = $GithubRepoName"
+			println "ProjectDescription = $ProjectDescription"
+			println "TeamLeader = $TeamLeader"
+		}
+		catch (MissingPropertyException e) {
+			println "Some of the parameters are missing. It might be due to obsolete JenkinsFile. Retry your build"
+			return;
+		}  
 	}
+
+	stage("Github Project Creation") {
+		createGithubProject(TeamLeader, JiraKey, GithubRepoName, ProjectDescription);
+	}
+
+	stage("Jira Project Creation") {
+		createJiraProject(JiraKey, GithubRepoName, ProjectDescription, TeamLeader);
+	}
+
+//	createProjectInTaskboard();
+
+//	createDashingConfiguration();
+
 }
