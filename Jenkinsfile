@@ -109,14 +109,13 @@ def createJiraProject(jiraKey, jiraName, description, lead)
 */
 	]
 	def json = new JsonBuilder(req).toPrettyString()
-	def response;
+
 	try {
-		response = httpRequest acceptType: 'APPLICATION_JSON', authentication: JIRA_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${JIRA_REST_ENDPOINT}/projectbuilder/1.0/project"
+		httpRequest acceptType: 'APPLICATION_JSON', authentication: JIRA_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, 
+			url: "${JIRA_REST_ENDPOINT}/projectbuilder/1.0/project", consoleLogResponseBody: true
 	}catch(Exception e) {
-		println "Could not create jira project. The request was:"
+		println "Could not create jira project. Failed request body"
 		println json
-		println "The response was:"
-		println response;
 		throw e;
 	}
 }
@@ -143,12 +142,11 @@ def createGithubRepo(repoName, description)
 
 	def json = new JsonBuilder(req).toPrettyString()
 	try {
-		response = httpRequest acceptType: 'APPLICATION_JSON', authentication: GITHUB_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${GITHUB_API_ENDPOINT}/repos"
+		httpRequest acceptType: 'APPLICATION_JSON', authentication: GITHUB_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${GITHUB_API_ENDPOINT}/repos",
+					consoleLogResponseBody: true
 	}catch(Exception e) {
 		println "Could not create github project. The request was:"
 		println json
-		println "The response was:"
-		println response.content
 		throw e;
 	}
 
@@ -158,7 +156,9 @@ def createGithubRepo(repoName, description)
 def createDashingConfiguration(jiraKey)
 {
 	def json = new JsonBuilder([project: jiraKey]).toPrettyString();
-	httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${DASHING_END_POINT}/project"
+	
+	httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${DASHING_END_POINT}/project",
+				consoleLogResponseBody: true
 }
 
 def updateTemplateVariables(templateName, varMap)
