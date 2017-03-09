@@ -75,7 +75,7 @@ def createGithubProject(leaderMail, jiraProjectName, repoName, description)
 	File buildGradle = new File(projDir, "build.gradle");
 	buildGradle << updateTemplateVariables("build.gradle.tpl", [
 		_JIRA_PROJECT_NAME_      : jiraProjectName,
-		_GITHUB_REPOSITORY_NAME_ : githubProjectName
+		_GITHUB_REPOSITORY_NAME_ : repoName
 	]);
 	push(projDir);
 }
@@ -122,12 +122,12 @@ def createJiraProject(jiraKey, jiraName, description, lead)
 	}
 }
 
-def createGithubRepo(githubProjectName, description)
+def createGithubRepo(repoName, description)
 {
 	try {
-		response = httpRequest acceptType: 'APPLICATION_JSON', authentication: GITHUB_CREDENTIALS_ID, url: "${GITHUB_REPOS_API_ENDPOINT}/${githubProjectName}"
+		response = httpRequest acceptType: 'APPLICATION_JSON', authentication: GITHUB_CREDENTIALS_ID, url: "${GITHUB_REPOS_API_ENDPOINT}/${repoName}"
 		if (response.status == 200) {
-			println "Github repo ${githubProjectName} already exists"
+			println "Github repo ${repoName} already exists"
 			return false;
 		}
 	} catch(Exception e) {
@@ -135,7 +135,7 @@ def createGithubRepo(githubProjectName, description)
 	}
 
 	def req = [
-	  name	      : githubProjectName,
+	  name	      : repoName,
 	  description : description,
 	  private     : false,
 	  has_issues  : true,
