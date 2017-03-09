@@ -8,6 +8,7 @@ import groovy.json.*
 @Field final GITHUB_REPOS_API_ENDPOINT = "https://api.github.com/repos/${ORGANIZATION}"
 @Field final GITHUB_CREDENTIALS_ID = "githubCredentials";
 @Field final JIRA_CREDENTIALS_ID = "jiraCredentials";
+@Field final DASHING_END_POINT = "http://localhost:3030/api/"
 
 properties([disableConcurrentBuilds(),
 	[$class: 'ParametersDefinitionProperty', 
@@ -155,6 +156,12 @@ def createGithubRepo(githubProjectName, description)
 	return true;
 }
 
+def createDashingConfiguration(jiraKey)
+{
+	def json = new JsonBuilder([project: jiraKey]);
+	httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${DASHING_END_POINT}/project"
+}
+
 def updateTemplateVariables(templateName, varMap)
 {
 	def txt = new File(workspace, templateName).text;
@@ -205,8 +212,9 @@ node {
 		createJiraProject(JiraKey, GithubRepoName, ProjectDescription, TeamLeader);
 	}
 
+	stage("Dashboard project creation") {
+		createDashingConfiguration(JiraKey);
+	}
+
 //	createProjectInTaskboard();
-
-//	createDashingConfiguration();
-
 }
