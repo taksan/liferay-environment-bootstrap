@@ -8,7 +8,6 @@ import groovy.json.*
 @Field final GITHUB_REPOS_API_ENDPOINT = "https://api.github.com/repos/${ORGANIZATION}"
 @Field final GITHUB_CREDENTIALS_ID = "githubCredentials";
 @Field final JIRA_CREDENTIALS_ID = "jiraCredentials";
-@Field final DASHING_END_POINT = "http://localhost:3030/api"
 
 properties([disableConcurrentBuilds(),
 	[$class: 'ParametersDefinitionProperty', 
@@ -186,6 +185,17 @@ def push(dir) {
 }
 
 node {
+	stage('Pre validation') {
+		if (env.DASHING_END_POINT == null) 
+			throw new IllegalStateException("You must set DASHING_END_POINT in the global properties");
+
+		if (env.JIRA_REST_ENDPOINT == null) 
+			throw new IllegalStateException("You must set JIRA_REST_ENDPOINT in the global properties");
+
+		if (env.ORGANIZATION == null) 
+			throw new IllegalStateException("You must set ORGANIZATION in the global properties");
+
+	}
 	stage('Checkout') {
 		checkout scm
 	}
