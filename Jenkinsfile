@@ -8,6 +8,7 @@ import groovy.json.*
 @Field final GITHUB_REPOS_API_ENDPOINT = "https://api.github.com/repos/${ORGANIZATION}"
 @Field final GITHUB_CREDENTIALS_ID = "githubCredentials";
 @Field final JIRA_CREDENTIALS_ID = "jiraCredentials";
+@Field final TASKBOARD_AUTH_ID = "taskboardCredentials"
 
 properties([disableConcurrentBuilds(),
 	[$class: 'ParametersDefinitionProperty', 
@@ -83,7 +84,7 @@ def createGithubProject(leaderMail, jiraProjectName, repoName, description)
 def createJiraProject(jiraKey, jiraName, description, lead)
 {
 	lead = lead.split("\\|")[0].trim();
-	def req=[
+	def json = asJson([
 		key                      : jiraKey,
 		name					 : jiraName,
 		description	             : description,
@@ -107,8 +108,7 @@ def createJiraProject(jiraKey, jiraName, description, lead)
 		notificationScheme      : "13250",
 		customFields            : [ 17737, 18629, 18624, 18521, 18522, 18523, 18626, 18623, 18620, 18625, 18635, 18642, 18627, 18630, 18520, 18621, 18622 ]
 */
-	]
-	def json = new JsonBuilder(req).toPrettyString()
+	]);
 
 	try {
 		httpRequest acceptType: 'APPLICATION_JSON', authentication: JIRA_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, 
@@ -132,15 +132,14 @@ def createGithubRepo(repoName, description)
 		// probably means the project doesn't exist, move on
 	}
 
-	def req = [
+	def json = asJson([
 	  name	      : repoName,
 	  description : description,
 	  private     : false,
 	  has_issues  : true,
 	  has_wiki    : true
-	]
+	]);
 
-	def json = new JsonBuilder(req).toPrettyString()
 	try {
 		httpRequest acceptType: 'APPLICATION_JSON', authentication: GITHUB_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${GITHUB_API_ENDPOINT}/repos",
 					consoleLogResponseBody: true
@@ -155,9 +154,15 @@ def createGithubRepo(repoName, description)
 
 def createDashingConfiguration(jiraKey)
 {
-	def json = new JsonBuilder([project: jiraKey]).toPrettyString();
+	def json = asJson([project: jiraKey])
 	
 	httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${DASHING_END_POINT}/project",
+				consoleLogResponseBody: true
+}
+
+def updateTaskboardConfiguration(jiraKey)
+{
+	httpRequest acceptType: 'APPLICATION_JSON', authentication: TASKBOARD_AUTH_ID, httpMode: 'POST', url: "${DASHING_END_POINT}/api/projectfilter?projectKey=${jiraKey}",
 				consoleLogResponseBody: true
 }
 
@@ -184,6 +189,10 @@ def push(dir) {
 	execCmd("cd ${dir.name} && git add * && git -c 'user.name=autocreator' -c 'user.email=autocreator@nomail' commit -m 'Project setup' && git push origin master")
 }
 
+def asJson(data) {
+	return new JsonBuilder(data).toPrettyString();
+}
+
 node {
 	stage('Pre validation') {
 		if (env.DASHING_END_POINT == null) 
@@ -195,6 +204,8 @@ node {
 		if (env.ORGANIZATION == null) 
 			throw new IllegalStateException("You must set ORGANIZATION in the global properties");
 
+		if (env.TASKBOARD_END_POINT == null)
+			throw new IllegalStateException("You must set TASKBOARD_END_POINT in the global properties");
 	}
 	stage('Checkout') {
 		checkout scm
@@ -224,6 +235,10 @@ node {
 
 	stage("Dashboard project creation") {
 		createDashingConfiguration(JiraKey);
+	}
+
+	stage("Taskboard project setup") {
+		updateTaskboardConfiguration(JiraKey);
 	}
 
 //	createProjectInTaskboard();
