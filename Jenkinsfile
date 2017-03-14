@@ -162,7 +162,7 @@ def createDashingConfiguration(jiraKey)
 
 def updateTaskboardConfiguration(jiraKey)
 {
-	httpRequest acceptType: 'APPLICATION_JSON', authentication: TASKBOARD_AUTH_ID, httpMode: 'POST', url: "${DASHING_END_POINT}/api/projectfilter?projectKey=${jiraKey}",
+	httpRequest acceptType: 'APPLICATION_JSON', authentication: TASKBOARD_AUTH_ID, httpMode: 'POST', url: "${TASKBOARD_END_POINT}/api/projectfilter?projectKey=${jiraKey}",
 				consoleLogResponseBody: true
 }
 
