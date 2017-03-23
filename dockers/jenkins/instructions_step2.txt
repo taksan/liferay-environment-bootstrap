@@ -1,0 +1,6 @@
+########################################################################################################################
+                                                                                           SETUP STEP
+
+   Now, there's a single job below, named "BOOTSTRAP_SETUP". Build the job to complete installation. After job is built, jenkins will restart again.
+
+########################################################################################################################
