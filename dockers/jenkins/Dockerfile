@@ -13,7 +13,9 @@ VOLUME $JENKINS_HOME
 
 RUN mkdir -p /opt/jenkins
 
-COPY run.sh setup.sh *.tpl scriptApprovals.xml /opt/jenkins/
+RUN echo -n
+
+COPY run.sh setup.sh *.tpl scriptApproval.xml *.txt *.xml /opt/jenkins/
 
 WORKDIR /opt/jenkins
 

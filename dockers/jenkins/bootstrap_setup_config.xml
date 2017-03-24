@@ -1,0 +1,143 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.10">
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>JIRA_ADDRESS</name>
+          <description>Address of jira instance where projects will be created.</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>JIRA_USERNAME</name>
+          <description></description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.PasswordParameterDefinition>
+          <name>JIRA_PASSWORD</name>
+          <description></description>
+          <defaultValue>{AQAAABAAAABA7c+pVUIRllkVFW7o6anFS37xo0aUJTqQrIiCkAEMuXT5Rvk9Pm+HNLcVV+hrR6gpmHT+hh4OpJL0GbLWFu+IybGJy1guF2LoKUGZ4N7IJj4=}</defaultValue>
+        </hudson.model.PasswordParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>GITHUB_ORGANIZATION</name>
+          <description>Name of github organization where projects will reside</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>GITHUB_USERNAME</name>
+          <description>This github user must have rights to create new projects</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.PasswordParameterDefinition>
+          <name>GITHUB_PASSWORD</name>
+          <description>You can either user the user password or create a token for this user</description>
+          <defaultValue>{AQAAABAAAABAi8pxgartGrKf6lWzZj9o9F0wNHtAri9BklDbtvk7FTU+nKoyjwi7b4JNPfnGSrcaQSemFTpWjDRRzs6Vp5QpCnTscpj7WlY7oXre8YknEKI=}</defaultValue>
+        </hudson.model.PasswordParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>TASKBOARD_ADDRESS</name>
+          <description>Address used to access the taskboard </description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>TASKBOARD_USERNAME</name>
+          <description></description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.PasswordParameterDefinition>
+          <name>TASKBOARD_PASSWORD</name>
+          <description></description>
+          <defaultValue>{AQAAABAAAABABex/XM3+2ZUAj9K10SdHIZiul/LW2zW/GmcLdBEEZtrFGMxQtfvWk5wj00GBeBmw7rU0G3Ft+NYqK1ZMVKdbhTjBPtXwykGkl8kMpzaPQ7A=}</defaultValue>
+        </hudson.model.PasswordParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>DASHING_ADDRESS</name>
+          <description>Address used to access the bashboard </description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers/>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.29">
+    <script>import jenkins.plugins.http_request.auth.BasicDigestAuthentication;
+import jenkins.plugins.http_request.HttpRequestGlobalConfig;
+
+import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import groovy.text.StreamingTemplateEngine;
+
+@NonCPS
+def addCredential(id, description, username, password) {
+    d=SystemCredentialsProvider.instance.getDomainCredentials().domain.get(0)
+    found = false;
+    SystemCredentialsProvider.getInstance().getStore().getCredentials(d).each {
+      found = found || it.id == id
+    }
+    if (found) {
+        println &quot;Skipping credential ${id}. It&apos;s already there&quot;
+    }
+    
+    c=new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, 
+                                          id, description, username, password)
+    SystemCredentialsProvider.getInstance().getStore().addCredentials(d, c)
+}
+
+@NonCPS
+def addAuth(keyName, username, password)
+{
+    def httpBasicAuth = HttpRequestGlobalConfig.get().basicDigestAuthentications;
+    def found = false;
+    httpBasicAuth.each { 
+        found = found || it.keyName == keyName;
+    }
+    if (found) {
+        println &quot;Skipping ${keyName}, already registered&quot;
+        return;
+    }
+    httpBasicAuth.add(new BasicDigestAuthentication(keyName, username, password))
+}
+
+node {
+    stage(&quot;Globals&quot;) {
+        Jenkins.instance.globalNodeProperties.add(new hudson.slaves.EnvironmentVariablesNodeProperty())
+        globalsMap = Jenkins.instance.globalNodeProperties.envVars.get(0);
+        
+        globalsMap.put(&quot;JIRA_REST_ENDPOINT&quot;, JIRA_ADDRESS+&quot;/rest&quot;)
+        globalsMap.put(&quot;ORGANIZATION&quot;, GITHUB_ORGANIZATION)
+        globalsMap.put(&quot;TASKBOARD_END_POINT&quot;, TASKBOARD_ADDRESS)
+        globalsMap.put(&quot;DASHING_END_POINT&quot;, DASHING_ADDRESS+&quot;/api&quot;)
+    }
+    
+    stage(&quot;Http Credentials&quot;) {
+        addAuth(&quot;githubCredentials&quot;, GITHUB_USERNAME, GITHUB_PASSWORD)
+        addAuth(&quot;jiraCredentials&quot;, JIRA_USERNAME, JIRA_USERNAME)
+        addAuth(&quot;taskboardCredentials&quot;, TASKBOARD_USERNAME, TASKBOARD_PASSWORD)
+    }
+
+    stage(&quot;Other credentials&quot;) {
+        addCredential(&quot;githubCredentials&quot;, &quot;Credentials to checkout projects&quot;, GITHUB_USERNAME, GITHUB_PASSWORD)        
+    }
+    
+    stage(&quot;Creating jobs&quot;) {
+        // create the jobs
+        def bootstrapFolder = new File(&quot;${JENKINS_HOME}/jobs/LiferayBootstrap&quot;);
+        bootstrapFolder.mkdirs()
+        new File(bootstrapFolder,&quot;config.xml&quot;) &lt;&lt; new File(&quot;/opt/jenkins/job_liferay-bootstrap-config.xml&quot;).text;
+    
+        def organizationFolder = new File(&quot;${JENKINS_HOME}/jobs/LiferayOrganization&quot;);
+        organizationFolder.mkdirs();
+    	new File(organizationFolder,&quot;config.xml&quot;) &lt;&lt; new StreamingTemplateEngine().createTemplate(new File(&quot;/opt/jenkins/job_organization-folder.tpl&quot;).text).make(env.getEnvironment())
+
+        Jenkins.instance.getView(&quot;All&quot;).description=&quot;PROCESSO FINALIZADO.. Reiniciando Server pela última vez&quot;
+        sh "touch /opt/jenkins/setup-complete"
+    }
+}</script>
+    <sandbox>false</sandbox>
+  </definition>
+  <triggers/>
+</flow-definition>

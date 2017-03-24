@@ -1,8 +1,7 @@
-<description>
 ########################################################################################################################
                                                                                                      ATTENTION
 
-                                                Jenkins will restart shortly. Refresh this page until you see new instructions.
+                                                Jenkins will restart shortly. Refresh this page until you see the login page. 
 
 
 
@@ -19,4 +18,3 @@
 
 
 ########################################################################################################################
-</description>

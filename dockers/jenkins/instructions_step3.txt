@@ -1,0 +1,13 @@
+#################################################
+
+Setup complete. You can go ahead and use jenkins.
+
+* Noteworth
+
+2 jobs have been created for you
+
+- LiferayBootstrap  - use this job to create or adapt new projects
+  configure to work with github, jira, taskboard and dashboard.
+
+- LiferayOrganization - this job will automatically scan your organization
+  and build the master branch and all pull requests

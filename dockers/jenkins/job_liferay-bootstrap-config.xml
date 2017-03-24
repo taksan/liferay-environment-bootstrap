@@ -13,7 +13,7 @@
       <configVersion>2</configVersion>
       <userRemoteConfigs>
         <hudson.plugins.git.UserRemoteConfig>
-          <url>${LIFERAY_BOOTSTRAP_REPO_URL}</url>
+          <url>https://github.com/objective-solutions/liferay-environment-bootstrap.git</url>
         </hudson.plugins.git.UserRemoteConfig>
       </userRemoteConfigs>
       <branches>
