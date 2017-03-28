@@ -163,7 +163,7 @@ def addJenkinsfileForExistingProjects(repoName, jiraProjectName, leaderMail)
     // file is missing, we need to up it there
     File projDir = new File(workspace, "proj");
     projDir.mkdirs();
-  	File jenkinsFile = new File(projdir, "Jenkinsfile");
+  	File jenkinsFile = new File(projDir, "Jenkinsfile");
     jenkinsFile << updateTemplateVariables("Jenkinsfile.tpl", [
     	_JIRA_PROJECT_NAME_      : jiraProjectName,
     	_GITHUB_REPOSITORY_NAME_ : repoName,
