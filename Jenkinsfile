@@ -3,6 +3,7 @@
 import groovy.transform.Field
 import groovy.json.*
 import java.util.Base64;
+import groovy.text.StreamingTemplateEngine;
 
 @Field final ORGANIZATION = "wiredlabs";
 @Field final GITHUB_REPOS_API_ENDPOINT = "repos/${ORGANIZATION}"
