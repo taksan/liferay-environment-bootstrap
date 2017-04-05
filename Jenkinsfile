@@ -119,9 +119,9 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
         projectTemplateKey       : "com.atlassian.jira-core-project-templates:jira-core-project-management",
         lead                     : lead,
         userInRoles              :[
-            "administrators"     : administrators, 
-            "developers"         : developers, 
-            "customers"          : customers
+            "Administrators"     : administrators, 
+            "Developers"         : developers, 
+            "Customers"          : customers
         ],
         issueTypeScheme          : 10100,
         workflowScheme           : 10100,
@@ -129,7 +129,7 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
         fieldConfigurationScheme : 10000,
         notificationScheme       : 10100,
         permissionScheme         : 10000,
-        customFields             : [10000]
+        customFields             : [10000],
 /*
         assigneeType            : "PROJECT_LEAD",
         issueTypeScheme         : "19882",
