@@ -32,7 +32,7 @@
           <id>#{_SCM_SOURCE_ID_}</id>
           <checkoutCredentialsId>SAME</checkoutCredentialsId>
           <scanCredentialsId>githubCredentials</scanCredentialsId>
-          <repoOwner>#{_ORGANIZATION_}</repoOwner>
+          <repoOwner>#{_GITHUB_ORGANIZATION_}</repoOwner>
           <repository>#{_GITHUB_REPOSITORY_NAME_}</repository>
           <includes>*</includes>
           <excludes/>
