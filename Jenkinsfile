@@ -246,6 +246,13 @@ def updateTemplateVariables(templateName, varMap)
     return txt;
 }
 
+def createPullRequestJob(githubRepoName) {
+    env.SCM_SOURCE_ID=java.util.UUID.randomUUID();
+    def expanded = new StreamingTemplateEngine().createTemplate(new File(workspace, "pullRequestBuilderJob.tpl").text).make(env.getEnvironment())
+    Jenkins.instance.createProjectFromXML(githubRepoName+"-github", new ByteArrayInputStream(expanded.toString().getBytes()))
+    expanded = null;
+}
+
 def execCmd(args){
     sh args
 }
@@ -319,6 +326,6 @@ node {
     }
 
     stage("Jenkins Pull Request Job Creation") {
-        
+        createPullRequestJob(GithubRepoName);
     }
 }
