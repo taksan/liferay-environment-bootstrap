@@ -19,7 +19,7 @@
         <hudson.model.PasswordParameterDefinition>
           <name>JIRA_PASSWORD</name>
           <description></description>
-          <defaultValue>{AQAAABAAAABA7c+pVUIRllkVFW7o6anFS37xo0aUJTqQrIiCkAEMuXT5Rvk9Pm+HNLcVV+hrR6gpmHT+hh4OpJL0GbLWFu+IybGJy1guF2LoKUGZ4N7IJj4=}</defaultValue>
+          <defaultValue></defaultValue>
         </hudson.model.PasswordParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>GITHUB_ORGANIZATION</name>
@@ -34,7 +34,7 @@
         <hudson.model.PasswordParameterDefinition>
           <name>GITHUB_PASSWORD</name>
           <description>You can either user the user password or create a token for this user</description>
-          <defaultValue>{AQAAABAAAABAi8pxgartGrKf6lWzZj9o9F0wNHtAri9BklDbtvk7FTU+nKoyjwi7b4JNPfnGSrcaQSemFTpWjDRRzs6Vp5QpCnTscpj7WlY7oXre8YknEKI=}</defaultValue>
+          <defaultValue></defaultValue>
         </hudson.model.PasswordParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>TASKBOARD_ADDRESS</name>
@@ -49,7 +49,7 @@
         <hudson.model.PasswordParameterDefinition>
           <name>TASKBOARD_PASSWORD</name>
           <description></description>
-          <defaultValue>{AQAAABAAAABABex/XM3+2ZUAj9K10SdHIZiul/LW2zW/GmcLdBEEZtrFGMxQtfvWk5wj00GBeBmw7rU0G3Ft+NYqK1ZMVKdbhTjBPtXwykGkl8kMpzaPQ7A=}</defaultValue>
+          <defaultValue></defaultValue>
         </hudson.model.PasswordParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>DASHING_ADDRESS</name>
@@ -69,21 +69,30 @@ import jenkins.plugins.http_request.HttpRequestGlobalConfig;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl
 import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.michelin.cio.hudson.plugins.rolestrategy.Role;
+import com.michelin.cio.hudson.plugins.rolestrategy.RoleMap;
+import com.michelin.cio.hudson.plugins.rolestrategy.RoleBasedAuthorizationStrategy;
+import jenkins.model.Jenkins;
+import hudson.security.Permission;
+import java.util.LinkedHashSet;
 import groovy.text.StreamingTemplateEngine;
+import jenkins.model.*;
+import net.sf.json.JSONObject;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
+import static hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 
 @NonCPS
 def addCredential(id, description, username, password) {
     d=SystemCredentialsProvider.instance.getDomainCredentials().domain.get(0)
-    found = false;
+    def found = false;
     SystemCredentialsProvider.getInstance().getStore().getCredentials(d).each {
       found = found || it.id == id
     }
     if (found) {
-        println &quot;Skipping credential ${id}. It&apos;s already there&quot;
+        println "Skipping credential ${id}. It's already there"
     }
     
-    c=new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, 
-                                          id, description, username, password)
+    c=new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, id, description, username, password)
     SystemCredentialsProvider.getInstance().getStore().addCredentials(d, c)
 }
 
@@ -96,44 +105,65 @@ def addAuth(keyName, username, password)
         found = found || it.keyName == keyName;
     }
     if (found) {
-        println &quot;Skipping ${keyName}, already registered&quot;
+        println "Skipping ${keyName}, already registered"
         return;
     }
     httpBasicAuth.add(new BasicDigestAuthentication(keyName, username, password))
 }
 
 node {
-    stage(&quot;Globals&quot;) {
-        Jenkins.instance.globalNodeProperties.add(new hudson.slaves.EnvironmentVariablesNodeProperty())
-        globalsMap = Jenkins.instance.globalNodeProperties.envVars.get(0);
-        
-        globalsMap.put(&quot;JIRA_REST_ENDPOINT&quot;, JIRA_ADDRESS+&quot;/rest&quot;)
-        globalsMap.put(&quot;ORGANIZATION&quot;, GITHUB_ORGANIZATION)
-        globalsMap.put(&quot;TASKBOARD_END_POINT&quot;, TASKBOARD_ADDRESS)
-        globalsMap.put(&quot;DASHING_END_POINT&quot;, DASHING_ADDRESS+&quot;/api&quot;)
-    }
-    
-    stage(&quot;Http Credentials&quot;) {
-        addAuth(&quot;githubCredentials&quot;, GITHUB_USERNAME, GITHUB_PASSWORD)
-        addAuth(&quot;jiraCredentials&quot;, JIRA_USERNAME, JIRA_USERNAME)
-        addAuth(&quot;taskboardCredentials&quot;, TASKBOARD_USERNAME, TASKBOARD_PASSWORD)
+   stage("Http Credentials") {
+        addAuth("githubCredentials", GITHUB_USERNAME, GITHUB_PASSWORD)
+        addAuth("jiraCredentials", JIRA_USERNAME, JIRA_USERNAME)
+        addAuth("taskboardCredentials", TASKBOARD_USERNAME, TASKBOARD_PASSWORD)
     }
 
-    stage(&quot;Other credentials&quot;) {
-        addCredential(&quot;githubCredentials&quot;, &quot;Credentials to checkout projects&quot;, GITHUB_USERNAME, GITHUB_PASSWORD)        
+    stage("Other credentials") {
+        addCredential("githubCredentials", "Credentials to checkout projects", GITHUB_USERNAME, GITHUB_PASSWORD)        
     }
     
-    stage(&quot;Creating jobs&quot;) {
+    stage("Creating jobs") {
         // create the jobs
-        def bootstrapFolder = new File(&quot;${JENKINS_HOME}/jobs/LiferayBootstrap&quot;);
-        bootstrapFolder.mkdirs()
-        new File(bootstrapFolder,&quot;config.xml&quot;) &lt;&lt; new File(&quot;/opt/jenkins/job_liferay-bootstrap-config.xml&quot;).text;
-    
-        def organizationFolder = new File(&quot;${JENKINS_HOME}/jobs/LiferayOrganization&quot;);
-        organizationFolder.mkdirs();
-    	new File(organizationFolder,&quot;config.xml&quot;) &lt;&lt; new StreamingTemplateEngine().createTemplate(new File(&quot;/opt/jenkins/job_organization-folder.tpl&quot;).text).make(env.getEnvironment())
+        def xmlStream = new ByteArrayInputStream(new File("/opt/jenkins/job_liferay-bootstrap-config.xml").text.getBytes());
+        Jenkins.instance.createProjectFromXML("LiferayBootstrap", xmlStream);
+        xmlStream = null; 
+    }
 
-        Jenkins.instance.getView(&quot;All&quot;).description=&quot;PROCESSO FINALIZADO.. Reiniciando Server pela última vez&quot;
+    stage("Globals") {
+        def env = new EnvironmentVariablesNodeProperty()
+        Jenkins.instance.globalNodeProperties.add(env);
+/*        def globalsMap = Jenkins.instance.globalNodeProperties.envVars.get(0);
+        
+        globalsMap.put("JIRA_REST_ENDPOINT", JIRA_ADDRESS+"/rest")
+        globalsMap.put("ORGANIZATION", GITHUB_ORGANIZATION)
+        globalsMap.put("TASKBOARD_END_POINT", TASKBOARD_ADDRESS)
+        globalsMap.put("DASHING_END_POINT", DASHING_ADDRESS+"/api")
+        globalsMap = null;
+        */
+        build job: 'BOOTSTRAP_GLOBALS_SETUP', parameters: [
+            string(name: 'JIRA_ADDRESS', value: JIRA_ADDRESS), 
+            string(name: 'GITHUB_ORGANIZATION', value: GITHUB_ORGANIZATION), 
+            string(name: 'TASKBOARD_ADDRESS', value: TASKBOARD_ADDRESS), 
+            string(name: 'DASHING_ADDRESS', value: DASHING_ADDRESS)], 
+            propagate: false, 
+            wait: false
+
+    }
+    /*
+    stage("Authorization setup") {
+		// Set Role Based Authorization Strategy
+		Jenkins.instance.setAuthorizationStrategy(RoleBasedAuthorizationStrategy.DESCRIPTOR.newInstance(null, JSONObject.fromObject(new Object())));
+
+		// add global role for all users with minimum read permission
+		RoleBasedAuthorizationStrategy strategy = (RoleBasedAuthorizationStrategy)Jenkins.getInstance().getAuthorizationStrategy();
+		permissions = new LinkedHashSet&lt;Permission&gt;();
+		permissions.add(Permission.fromId("hudson.model.Hudson.Read"))
+		permissions.add(Permission.fromId("hudson.model.View.Read"))
+		strategy.addRole(RoleBasedAuthorizationStrategy.GLOBAL, new Role("allusers-readonly", permissions))
+    }*/
+
+    stage("Finishing") {
+        Jenkins.instance.getView("All").description="PROCESSO FINALIZADO.. Reiniciando Server pela última vez"
         sh "touch /opt/jenkins/setup-complete"
     }
 }</script>

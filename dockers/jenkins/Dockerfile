@@ -15,7 +15,11 @@ RUN mkdir -p /opt/jenkins
 
 RUN echo -n
 
-COPY run.sh setup.sh *.tpl scriptApproval.xml *.txt *.xml /opt/jenkins/
+COPY run.sh setup.sh install-control.sh *.tpl scriptApproval.xml *.txt *.xml /opt/jenkins/
+
+COPY 001-jenkins-guide.conf /etc/apache2/sites-enabled/
+
+COPY down.html /var/www/html/
 
 WORKDIR /opt/jenkins
 

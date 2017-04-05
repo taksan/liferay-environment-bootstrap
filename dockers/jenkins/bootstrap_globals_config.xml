@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flow-definition plugin="workflow-job@2.10">
+  <actions/>
+  <description/>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>JIRA_ADDRESS</name>
+          <description>Address of jira instance where projects will be created.</description>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>GITHUB_ORGANIZATION</name>
+          <description>Name of github organization where projects will reside</description>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>TASKBOARD_ADDRESS</name>
+          <description>Address used to access the taskboard </description>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>DASHING_ADDRESS</name>
+          <description>Address used to access the bashboard </description>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers/>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.29">
+    <script>node {
+    stage("Globals") {
+        def globalsMap = Jenkins.instance.globalNodeProperties.envVars.get(0);
+        
+        globalsMap.put("JIRA_REST_ENDPOINT", JIRA_ADDRESS+"/rest")
+        globalsMap.put("ORGANIZATION", GITHUB_ORGANIZATION)
+        globalsMap.put("TASKBOARD_END_POINT", TASKBOARD_ADDRESS)
+        globalsMap.put("DASHING_END_POINT", DASHING_ADDRESS+"/api")
+
+        globalsMap = null;
+    }
+}</script>
+    <sandbox>false</sandbox>
+  </definition>
+  <triggers/>
+</flow-definition>

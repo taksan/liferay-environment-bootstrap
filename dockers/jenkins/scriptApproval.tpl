@@ -1,7 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <scriptApproval plugin="script-security">
   <approvedScriptHashes>
-    <string>df477254799ac2d78bc570f16f3337309335ec4b</string>
+    <string>${SCRIPT_HASH}</string>
+    <string>${GLOBALS_SCRIPT_HASH}</string>
   </approvedScriptHashes>
   <approvedSignatures>
     <string>method groovy.json.JsonBuilder toPrettyString</string>
