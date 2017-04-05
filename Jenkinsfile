@@ -248,9 +248,7 @@ def updateTemplateVariables(templateName, varMap)
 
 def createPullRequestJob(githubRepoName) {
     File jobConfig = new File(workspace, "pullRequestBuilderJob.xml");
-    if (jobConfig.exist())
-        jobConfig.remove();
-    jobConfig << updateTemplateVariables("pullRequestBuilderJob.tpl", [
+    jobConfig.write updateTemplateVariables("pullRequestBuilderJob.tpl", [
         _SCM_SOURCE_ID_          : java.util.UUID.randomUUID().toString(),
         _GITHUB_REPOSITORY_NAME_ : githubRepoName,
         _GITHUB_ORGANIZATION_    : ORGANIZATION,
