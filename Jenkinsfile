@@ -249,7 +249,7 @@ def updateTemplateVariables(templateName, varMap)
 def createPullRequestJob(githubRepoName) {
     File jenkinsFile = new File(workspace, "pullRequestBuilderJob.xml");
     jenkinsFile << updateTemplateVariables("pullRequestBuilderJob.tpl", [
-        _SCM_SOURCE_ID_          : java.util.UUID.randomUUID(),
+        _SCM_SOURCE_ID_          : java.util.UUID.randomUUID().toString(),
         _GITHUB_REPOSITORY_NAME_ : githubRepoName,
         _GITHUB_ORGANIZATION_    : ORGANIZATION,
     ])
