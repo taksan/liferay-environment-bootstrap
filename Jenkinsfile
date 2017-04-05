@@ -93,7 +93,7 @@ def createGithubProject(leaderMail, jiraProjectName, repoName, description)
 
     clone (fullRepoName, projDir);
     File jenkinsFile = new File(projDir, "Jenkinsfile");
-    jenkinsFile << updateTemplateVariables("Jenkinsfile.tpl", [
+    jenkinsFile.write updateTemplateVariables("Jenkinsfile.tpl", [
         _JIRA_PROJECT_NAME_      : jiraProjectName,
         _GITHUB_REPOSITORY_NAME_ : repoName,
         _GITHUB_ORGANIZATION_    : ORGANIZATION,
@@ -101,7 +101,7 @@ def createGithubProject(leaderMail, jiraProjectName, repoName, description)
     ])
 
     File buildGradle = new File(projDir, "build.gradle");
-    buildGradle << updateTemplateVariables("build.gradle.tpl", [
+    buildGradle.write updateTemplateVariables("build.gradle.tpl", [
         _JIRA_PROJECT_NAME_      : jiraProjectName,
         _GITHUB_REPOSITORY_NAME_ : repoName
     ]);
@@ -164,7 +164,7 @@ def addJenkinsfileForExistingProjects(repoName, jiraProjectName, leaderMail)
     File projDir = new File(workspace, "proj");
     projDir.mkdirs();
     File jenkinsFile = new File(projDir, "Jenkinsfile");
-    jenkinsFile << updateTemplateVariables("Jenkinsfile.tpl", [
+    jenkinsFile.write updateTemplateVariables("Jenkinsfile.tpl", [
         _JIRA_PROJECT_NAME_      : jiraProjectName,
         _GITHUB_REPOSITORY_NAME_ : repoName,
         _GITHUB_ORGANIZATION_    : ORGANIZATION,
