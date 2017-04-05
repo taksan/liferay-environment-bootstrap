@@ -9,6 +9,7 @@ import java.util.Base64;
 @Field final GITHUB_CREDENTIALS_ID = "githubCredentials";
 @Field final JIRA_CREDENTIALS_ID = "jiraCredentials";
 @Field final TASKBOARD_AUTH_ID = "taskboardCredentials"
+@Field final VERBOSE_REQUESTS = false;
 
 properties([disableConcurrentBuilds(),
     [$class: 'ParametersDefinitionProperty', 
@@ -114,7 +115,7 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
     def json = asJson([
         key                      : jiraKey,
         name                     : jiraName,
-        description                 : description,
+        description              : description,
         projectTypeKey           : "business",
         projectTemplateKey       : "com.atlassian.jira-core-project-templates:jira-core-project-management",
         lead                     : lead,
@@ -144,7 +145,7 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
 
     try {
         httpRequest acceptType: 'APPLICATION_JSON', authentication: JIRA_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, 
-            url: "${JIRA_REST_ENDPOINT}/projectbuilder/1.0/project", consoleLogResponseBody: true
+            url: "${JIRA_REST_ENDPOINT}/projectbuilder/1.0/project", consoleLogResponseBody: VERBOSE_REQUESTS
     }catch(Exception e) {
         println "Could not create jira project. Failed request body"
         println json
@@ -218,7 +219,7 @@ def githubPutRequest(serviceEndpoint, data) {
 
 def githubRequest(serviceEndpoint, mode, json) {
     resp = httpRequest acceptType: 'APPLICATION_JSON', authentication: GITHUB_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: mode, requestBody: json, url: "https://api.github.com/$serviceEndpoint",
-                    consoleLogResponseBody: true, validResponseCodes: "100:599"
+                    consoleLogResponseBody: VERBOSE_REQUESTS, validResponseCodes: "100:599"
     return resp;                    
 }
 
@@ -228,13 +229,13 @@ def createDashingConfiguration(jiraKey)
     def json = asJson([project: jiraKey])
     
     httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${DASHING_END_POINT}/project",
-                consoleLogResponseBody: true
+                consoleLogResponseBody: VERBOSE_REQUESTS 
 }
 
 def updateTaskboardConfiguration(jiraKey, projectOwner)
 {
     httpRequest acceptType: 'APPLICATION_JSON', authentication: TASKBOARD_AUTH_ID, httpMode: 'POST', url: "${TASKBOARD_END_POINT}/api/projects?projectKey=${jiraKey}",
-                requestBody: asJson([projectKey: JiraKey, teamLeader: projectOwner]) ,consoleLogResponseBody: true
+                requestBody: asJson([projectKey: JiraKey, teamLeader: projectOwner]) ,consoleLogResponseBody: VERBOSE_REQUESTS
 }
 
 def updateTemplateVariables(templateName, varMap)
