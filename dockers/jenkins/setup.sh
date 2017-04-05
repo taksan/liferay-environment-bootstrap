@@ -14,7 +14,7 @@ function main()
     sed 's/Listen 80/Listen 8080/' -i /etc/apache2/ports.conf
     service apache2 start >/dev/null 2>&1
 
-    REQUIRED_PLUGINS="http_request.hpi uno-choice.hpi scriptler.hpi role-strategy.hpi groovy.hpi"
+    REQUIRED_PLUGINS="http_request.hpi uno-choice.hpi scriptler.hpi role-strategy.hpi"
     for P in $REQUIRED_PLUGINS; do
         echo "Installing required plugin : $P"
         wget -q http://updates.jenkins-ci.org/latest/$P -O $JENKINS_HOME/plugins/$P

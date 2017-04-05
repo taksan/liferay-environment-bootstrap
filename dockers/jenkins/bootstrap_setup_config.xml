@@ -130,23 +130,16 @@ node {
     }
 
     stage("Globals") {
-        def env = new EnvironmentVariablesNodeProperty()
-        Jenkins.instance.globalNodeProperties.add(env);
-/*        def globalsMap = Jenkins.instance.globalNodeProperties.envVars.get(0);
-        
-        globalsMap.put("JIRA_REST_ENDPOINT", JIRA_ADDRESS+"/rest")
-        globalsMap.put("ORGANIZATION", GITHUB_ORGANIZATION)
-        globalsMap.put("TASKBOARD_END_POINT", TASKBOARD_ADDRESS)
-        globalsMap.put("DASHING_END_POINT", DASHING_ADDRESS+"/api")
-        globalsMap = null;
-        */
+        Jenkins.instance.globalNodeProperties.add(new EnvironmentVariablesNodeProperty());
+
+        // for some obscure reason, the first run isn't able to setup globals, so we do in a separate job
         build job: 'BOOTSTRAP_GLOBALS_SETUP', parameters: [
             string(name: 'JIRA_ADDRESS', value: JIRA_ADDRESS), 
             string(name: 'GITHUB_ORGANIZATION', value: GITHUB_ORGANIZATION), 
             string(name: 'TASKBOARD_ADDRESS', value: TASKBOARD_ADDRESS), 
             string(name: 'DASHING_ADDRESS', value: DASHING_ADDRESS)], 
             propagate: false, 
-            wait: false
+            wait: true
 
     }
     /*

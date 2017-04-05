@@ -45,8 +45,6 @@ if [[ $SCRIPT_NAME = "/" ]]; then
     fi
 fi
 
-
-
 OUT=/tmp/current_content
 
 cat - | tee $OUT
@@ -96,7 +94,7 @@ if match "plugin-setup-wizard-container"; then
             return;
 
         observer.disconnect();
-        document.getElementById('__instructions_div__').innerHTML='Fill out admin information and click <b>Save and Finish</b>.  Jenkins will restart.'
+        document.getElementById('__instructions_div__').innerHTML='Fill out admin information and click <b>Save and Finish</b>. After click, refresh a couple times until you get to the login page.'
 
         // prevent user from choosing to skip configuration option
         document.querySelector('.skip-first-user').style.display='none'
