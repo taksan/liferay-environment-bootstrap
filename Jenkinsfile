@@ -3,7 +3,6 @@
 import groovy.transform.Field
 import groovy.json.*
 import java.util.Base64;
-import groovy.text.StreamingTemplateEngine;
 
 @Field final ORGANIZATION = "wiredlabs";
 @Field final GITHUB_REPOS_API_ENDPOINT = "repos/${ORGANIZATION}"
@@ -164,7 +163,7 @@ def addJenkinsfileForExistingProjects(repoName, jiraProjectName, leaderMail)
     // file is missing, we need to up it there
     File projDir = new File(workspace, "proj");
     projDir.mkdirs();
-      File jenkinsFile = new File(projDir, "Jenkinsfile");
+    File jenkinsFile = new File(projDir, "Jenkinsfile");
     jenkinsFile << updateTemplateVariables("Jenkinsfile.tpl", [
         _JIRA_PROJECT_NAME_      : jiraProjectName,
         _GITHUB_REPOSITORY_NAME_ : repoName,
@@ -248,8 +247,15 @@ def updateTemplateVariables(templateName, varMap)
 }
 
 def createPullRequestJob(githubRepoName) {
-    env.SCM_SOURCE_ID=java.util.UUID.randomUUID();
-    def expanded = new StreamingTemplateEngine().createTemplate(new File(workspace, "pullRequestBuilderJob.tpl").text).make(env.getEnvironment())
+    File jenkinsFile = new File(workspace, "pullRequestBuilderJob.xml");
+    jenkinsFile << updateTemplateVariables("pullRequestBuilderJob.tpl", [
+        _SCM_SOURCE_ID_          : java.util.UUID.randomUUID(),
+        _GITHUB_REPOSITORY_NAME_ : githubRepoName,
+        _GITHUB_ORGANIZATION_    : ORGANIZATION,
+    ])
+
+
+    def expanded = new File(workspace, "pullRequestBuilderJob.xml").text
     Jenkins.instance.createProjectFromXML(githubRepoName+"-github", new ByteArrayInputStream(expanded.toString().getBytes()))
     expanded = null;
 }

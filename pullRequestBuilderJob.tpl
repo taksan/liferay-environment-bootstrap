@@ -25,15 +25,15 @@
     <numToKeep>0</numToKeep>
   </orphanedItemStrategy>
   <triggers/>
-  <sources class="jenkins.branch.MultiBranchProject\$BranchSourceList" plugin="branch-api@2.0.6">
+  <sources class="jenkins.branch.MultiBranchProject$BranchSourceList" plugin="branch-api@2.0.6">
     <data>
       <jenkins.branch.BranchSource>
         <source class="org.jenkinsci.plugins.github_branch_source.GitHubSCMSource" plugin="github-branch-source@2.0.3">
-          <id>${SCM_SOURCE_ID}</id>
+          <id>#{_SCM_SOURCE_ID_}</id>
           <checkoutCredentialsId>SAME</checkoutCredentialsId>
           <scanCredentialsId>githubCredentials</scanCredentialsId>
-          <repoOwner>${ORGANIZATION}</repoOwner>
-          <repository>${GithubRepoName}</repository>
+          <repoOwner>#{_ORGANIZATION_}</repoOwner>
+          <repository>#{_GITHUB_REPOSITORY_NAME_}</repository>
           <includes>*</includes>
           <excludes/>
           <buildOriginBranch>true</buildOriginBranch>
