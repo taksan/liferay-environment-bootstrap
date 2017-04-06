@@ -266,6 +266,10 @@ def updateTemplateVariables(templateName, varMap)
 
 def createJobFromTemplate(jobName, templateFile, varMap) {
     def jobXml = updateTemplateVariables(templateFile, varMap )
+    if (Jenkins.instance.item(jobName) != null) {
+        println "Job ${jobName} already exists. Skipping creation"
+        return;
+    }
     Jenkins.instance.createProjectFromXML(jobName, new ByteArrayInputStream(jobXml.getBytes()))
 
 }
