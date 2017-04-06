@@ -3,6 +3,7 @@
 import groovy.transform.Field
 import groovy.json.*
 import java.util.Base64;
+import java.lang.IllegalArgumentException;
 
 @Field final ORGANIZATION = "wiredlabs";
 @Field final GITHUB_REPOS_API_ENDPOINT = "repos/${ORGANIZATION}"
@@ -266,12 +267,11 @@ def updateTemplateVariables(templateName, varMap)
 
 def createJobFromTemplate(jobName, templateFile, varMap) {
     def jobXml = updateTemplateVariables(templateFile, varMap )
-    if (Jenkins.instance.item(jobName) != null) {
-        println "Job ${jobName} already exists. Skipping creation"
-        return;
+    try {
+        Jenkins.instance.createProjectFromXML(jobName, new ByteArrayInputStream(jobXml.getBytes()))
+    } catch(IllegalArgumentException e) {
+        println "Job ${jobName} not created (reason: e.message), probably already exists. Just ignore."
     }
-    Jenkins.instance.createProjectFromXML(jobName, new ByteArrayInputStream(jobXml.getBytes()))
-
 }
 
 def createProjectJobs(githubRepoName) {
