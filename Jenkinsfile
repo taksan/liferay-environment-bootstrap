@@ -130,7 +130,7 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
         fieldConfigurationScheme : 10000,
         notificationScheme       : 10100,
         permissionScheme         : 10000,
-        customFields             : [ { "id": 10000, "" : "schemeId": 10101}],
+        customFields             : [ { "id": 10000, "schemeId": 10101} ],
 /*
         assigneeType            : "PROJECT_LEAD",
         issueTypeScheme         : "19882",
