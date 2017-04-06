@@ -270,7 +270,7 @@ def createJobFromTemplate(jobName, templateFile, varMap) {
     try {
         Jenkins.instance.createProjectFromXML(jobName, new ByteArrayInputStream(jobXml.getBytes()))
     } catch(IllegalArgumentException e) {
-        println "Job ${jobName} not created (reason: e.message), probably already exists. Just ignore."
+        println "Job ${jobName} not created (reason: ${e.message}), probably already exists. Just ignore."
     }
 }
 
