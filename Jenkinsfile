@@ -130,7 +130,7 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
         fieldConfigurationScheme : 10000,
         notificationScheme       : 10100,
         permissionScheme         : 10000,
-        customFields             : [10000],
+        customFields             : [ { "id": 10000, "" : "schemeId": 10101}],
 /*
         assigneeType            : "PROJECT_LEAD",
         issueTypeScheme         : "19882",
@@ -139,7 +139,24 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
         fieldConfigurationScheme: "13600",
         permissionScheme        : "11770",
         notificationScheme      : "13250",
-        customFields            : [ 17737, 18629, 18624, 18521, 18522, 18523, 18626, 18623, 18620, 18625, 18635, 18642, 18627, 18630, 18520, 18621, 18622 ]
+        customFields            : [ 
+            { id: "17737", schemeId: "19002" }, 
+            { id: "18629", schemeId: "19989" }, 
+            { id: "18624", schemeId: "19984" }, 
+            { id: "18521", schemeId: "19782" }, 
+            { id: "18522", schemeId: "19783" }, 
+            { id: "18523", schemeId: "19784" }, 
+            { id: "18626", schemeId: "19986" }, 
+            { id: "18623", schemeId: "19983" }, 
+            { id: "18620", schemeId: "19980" }, 
+            { id: "18625", schemeId: "19985" }, 
+            { id: "18635", schemeId: "19996" }, 
+            { id: "18642", schemeId: "20004" }, 
+            { id: "18627", schemeId: "19987" }, 
+            { id: "18630", schemeId: "19990" }, 
+            { id: "18520", schemeId: "19781" }, 
+            { id: "18621", schemeId: "19981" }, 
+            { id: "18622", schemeId: "19982" } ]
 */
     ]);
 
@@ -247,18 +264,26 @@ def updateTemplateVariables(templateName, varMap)
     return txt;
 }
 
-def createPullRequestJob(githubRepoName) {
-    File jobConfig = new File(workspace, "pullRequestBuilderJob.xml");
-    jobConfig.write updateTemplateVariables("pullRequestBuilderJob.tpl", [
+def createJobFromTemplate(jobName, templateFile, varMap) {
+    def jobXml = updateTemplateVariables(templateFile, varMap )
+    Jenkins.instance.createProjectFromXML(jobName, new ByteArrayInputStream(jobXml.getBytes()))
+
+}
+
+def createProjectJobs(githubRepoName) {
+	createJobFromTemplate(githubRepoName+"-pr-builder", "pullRequestBuilderJob.tpl", [
         _SCM_SOURCE_ID_          : java.util.UUID.randomUUID().toString(),
+        _GITHUB_CREDENTIALS_ID_  : GITHUB_CREDENTIALS_ID,
         _GITHUB_REPOSITORY_NAME_ : githubRepoName,
         _GITHUB_ORGANIZATION_    : ORGANIZATION,
     ])
 
-
-    def expanded = new File(workspace, "pullRequestBuilderJob.xml").text
-    Jenkins.instance.createProjectFromXML(githubRepoName+"-github", new ByteArrayInputStream(expanded.toString().getBytes()))
-    expanded = null;
+	createJobFromTemplate(githubRepoName+"-bundle-build", "bundle-build-config.tpl", [
+        _SCM_SOURCE_ID_          : java.util.UUID.randomUUID().toString(),
+        _GITHUB_CREDENTIALS_ID_  : GITHUB_CREDENTIALS_ID,
+        _GITHUB_REPOSITORY_NAME_ : githubRepoName,
+        _GITHUB_ORGANIZATION_    : ORGANIZATION,
+    ])
 }
 
 def execCmd(args){
@@ -333,7 +358,7 @@ node {
         updateTaskboardConfiguration(JiraKey, ProjectOwner);
     }
 
-    stage("Jenkins Pull Request Job Creation") {
-        createPullRequestJob(GithubRepoName);
+    stage("Projects Jobs Creation") {
+        createProjectJobs(GithubRepoName);
     }
 }
