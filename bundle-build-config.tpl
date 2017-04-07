@@ -64,7 +64,7 @@ node {
             
         timestamps {
             gradlew "-Pliferay.workspace.bundle.url=${NexusHostUrl}/repository/patched-bundle/patched-bundle-${version_name}.zip -Pliferay.workspace.environment=vanilla distBundleZip --no-daemon"
-            new File("${workspace}/build",+JOB_NAME+".zip").renameTo("${workspace}/build/${githubProjectName}-${build_number}.zip");
+            new File("${workspace}/build",JOB_NAME+".zip").renameTo("${workspace}/build/${githubProjectName}-${build_number}.zip");
         }
   }   
   stage('Nexus Upload') {
