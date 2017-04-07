@@ -124,15 +124,13 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
             "Developers"         : developers, 
             "Customers"          : customers
         ],
-        issueTypeScheme          : 10100,
+/*        issueTypeScheme          : 10100,
         workflowScheme           : 10100,
         issueTypeScreenScheme    : 10000,
         fieldConfigurationScheme : 10000,
         notificationScheme       : 10100,
         permissionScheme         : 10000,
-        customFields             : [ [ "id": 10000, "schemeId": 10101] ],
-/*
-        assigneeType            : "PROJECT_LEAD",
+        customFields             : [ [ "id": 10000, "schemeId": 10101] ],*/
         issueTypeScheme         : "19882",
         workflowScheme          : "17180",
         issueTypeScreenScheme   : "14450",
@@ -157,7 +155,6 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
             [ id: "18520", schemeId: "19781" ], 
             [ id: "18621", schemeId: "19981" ], 
             [ id: "18622", schemeId: "19982" ] ]
-*/
     ]);
 
     try {
