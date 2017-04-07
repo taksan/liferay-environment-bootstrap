@@ -69,7 +69,7 @@ def fetchJiraUsersScript()
         auth = Base64.getEncoder().encodeToString((user + ":" + password).getBytes());
         users = new JsonSlurper().parseText(new URL("${JIRA_ENDPOINT}/projectbuilder/1.0/users").getText(requestProperties: ['Authorization': "Basic ${auth}"]))
 
-        return users.inject([:]){map, u-> map << [(u.key): u.displayName] }
+        return users.inject([:]){map, u-> map << [(u.name): u.displayName] }
         '''
 }
 
