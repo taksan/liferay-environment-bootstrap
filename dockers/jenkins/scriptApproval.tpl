@@ -5,6 +5,8 @@
     <string>${GLOBALS_SCRIPT_HASH}</string>
   </approvedScriptHashes>
   <approvedSignatures>
+    <string>method groovy.lang.Binding getVariables</string>
+    <string>method java.lang.Throwable printStackTrace</string>
     <string>method groovy.json.JsonBuilder toPrettyString</string>
     <string>method groovy.lang.GroovyObject invokeMethod java.lang.String java.lang.Object</string>
     <string>method java.io.File exists</string>
@@ -20,6 +22,10 @@
     <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getText java.io.File</string>
     <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getText java.net.URL java.util.Map</string>
     <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods leftShift java.io.File java.lang.Object</string>
+    <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachFileRecurse java.io.File groovy.lang.Closure</string>
+    <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods renameTo java.io.File java.lang.String</string>
+    <string>method java.util.Properties setProperty java.lang.String java.lang.String</string>
+    <string>new java.util.Properties<string>
   </approvedSignatures>
   <aclApprovedSignatures/>
   <approvedClasspathEntries/>
