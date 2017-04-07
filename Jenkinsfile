@@ -5,8 +5,6 @@ import groovy.json.*
 import java.util.Base64;
 import java.lang.IllegalArgumentException;
 
-@Field final ORGANIZATION = "repos/${env.ORGANIZATION}"
-@Field final GITHUB_REPOS_API_ENDPOINT = "repos/${ORGANIZATION}"
 @Field final GITHUB_CREDENTIALS_ID = "githubCredentials";
 @Field final JIRA_CREDENTIALS_ID = "jiraCredentials";
 @Field final TASKBOARD_AUTH_ID = "taskboardCredentials"
@@ -17,7 +15,7 @@ properties([disableConcurrentBuilds(),
         parameterDefinitions: [
             stringParameter("JiraKey","Jira key for the project"),
             stringParameter("JiraProjectName","Project name"),
-            stringParameter("GithubRepoName","Github Repo Name. The repo will become github.com/${ORGANIZATION}/<given name>"),
+            stringParameter("GithubRepoName","Github Repo Name. The repo will become github.com/<ORGANIZATION>/<given name>"),
             stringParameter("ProjectDescription","Project Description"),
             choiceParameter("ProjectOwner", "Project's owner user", "PT_SINGLE_SELECT"),
             choiceParameter("JiraAdministrators", "Project's administrators", "PT_MULTI_SELECT"),
@@ -125,13 +123,6 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
             "Developers"         : developers, 
             "Customers"          : customers
         ],
-/*        issueTypeScheme          : 10100,
-        workflowScheme           : 10100,
-        issueTypeScreenScheme    : 10000,
-        fieldConfigurationScheme : 10000,
-        notificationScheme       : 10100,
-        permissionScheme         : 10000,
-        customFields             : [ [ "id": 10000, "schemeId": 10101] ],*/
         issueTypeScheme         : "19882",
         workflowScheme          : "17180",
         issueTypeScreenScheme   : "14450",
@@ -306,6 +297,7 @@ def asJson(data) {
 }
 
 node {
+    GITHUB_REPOS_API_ENDPOINT = "repos/${ORGANIZATION}"
     stage('Pre validation') {
         if (env.DASHING_END_POINT == null) 
             throw new IllegalStateException("You must set DASHING_END_POINT in the global properties");
