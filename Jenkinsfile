@@ -64,8 +64,7 @@ def fetchJiraUsersScript()
 
         final user = jiraCredentials.userName;
         final password = jiraCredentials.password;
-        final JIRA_ENDPOINT = Jenkins.instance.getGlobalNodeProperties()[0].getEnvVars().get("JIRA_REST_ENDPOINT")+"/api/latest";
-        final wildcard = "."; // latest jira is .
+        final JIRA_ENDPOINT = Jenkins.instance.getGlobalNodeProperties()[0].getEnvVars().get("JIRA_REST_ENDPOINT");
 
         auth = Base64.getEncoder().encodeToString((user + ":" + password).getBytes());
         users = new JsonSlurper().parseText(new URL("${JIRA_ENDPOINT}/projectbuilder/1.0/users").getText(requestProperties: ['Authorization': "Basic ${auth}"]))
