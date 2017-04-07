@@ -335,7 +335,7 @@ node {
     }
 
     stage("Jira Project Creation") {
-        createJiraProject(JiraKey, GithubRepoName, ProjectDescription, ProjectOwner, 
+        createJiraProject(JiraKey, JiraProjectName, ProjectDescription, ProjectOwner, 
             JiraAdministrators.split(","), 
             JiraDevelopers.split(","), 
             JiraCustomers.split(","));
