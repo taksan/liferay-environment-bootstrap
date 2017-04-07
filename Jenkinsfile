@@ -5,7 +5,6 @@ import groovy.json.*
 import java.util.Base64;
 import java.lang.IllegalArgumentException;
 
-@Field final ORGANIZATION = "wiredlabs";
 @Field final GITHUB_REPOS_API_ENDPOINT = "repos/${ORGANIZATION}"
 @Field final GITHUB_CREDENTIALS_ID = "githubCredentials";
 @Field final JIRA_CREDENTIALS_ID = "jiraCredentials";
