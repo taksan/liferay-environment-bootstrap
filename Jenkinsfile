@@ -123,7 +123,7 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
             "Developers"         : developers, 
             "Customers"          : customers
         ],
-        issueTypeScheme         : "19882",
+        issueTypeScheme         : "20480",
         workflowScheme          : "17180",
         issueTypeScreenScheme   : "14450",
         fieldConfigurationScheme: "13600",
@@ -343,15 +343,16 @@ node {
             JiraCustomers.split(","));
     }
 
-    stage("Dashboard project creation") {
-        createDashingConfiguration(JiraKey);
-    }
-
-    stage("Taskboard project setup") {
-        updateTaskboardConfiguration(JiraKey, ProjectOwner);
-    }
-
     stage("Projects Jobs Creation") {
         createProjectJobs(GithubRepoName);
     }
+
+    stage("Dashboard project creation") {
+//        createDashingConfiguration(JiraKey);
+    }
+
+    stage("Taskboard project setup") {
+//        updateTaskboardConfiguration(JiraKey, ProjectOwner);
+    }
+
 }
