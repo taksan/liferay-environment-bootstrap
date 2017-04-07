@@ -38,7 +38,7 @@ def choiceParameter(name, description, choiceType) {
         filterable: false, 
         randomName: "$name-91356231368852", 
         script: [$class: 'GroovyScript', 
-            fallbackScript: [classpath: [], sandbox: false, script: 'return ["Failed to retrieve users from jira"];'], 
+            fallbackScript: [classpath: [], sandbox: false, script: 'return ["igor.arouca"];'], 
             script: [classpath: [], sandbox: false, script: fetchJiraUsersScript()]
         ]
     ]    
@@ -60,7 +60,7 @@ def fetchJiraUsersScript()
         httpBasicAuth.each { 
             if (it.keyName == "jiraCredentials")
                 jiraCredentials = it;
-        }
+        e
 
 
         final user = jiraCredentials.userName;
