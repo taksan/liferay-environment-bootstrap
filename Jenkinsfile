@@ -57,11 +57,10 @@ def fetchJiraUsersScript()
 
         def httpBasicAuth = HttpRequestGlobalConfig.get().basicDigestAuthentications;
         def jiraCredentials = null;
-        httpBasicAuth.each { 
+        for (it in httpBasicAuth) {
             if (it.keyName == "jiraCredentials")
                 jiraCredentials = it;
-        e
-
+        }
 
         final user = jiraCredentials.userName;
         final password = jiraCredentials.password;
