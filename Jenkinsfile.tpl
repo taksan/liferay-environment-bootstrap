@@ -5,6 +5,8 @@ properties([disableConcurrentBuilds()])
 
 
 def gitRepository = '#{_GITHUB_ORGANIZATION_}/#{_GITHUB_REPOSITORY_NAME_}'
+def projectName = "#{_JIRA_PROJECT_NAME_}#"
+def projectKey  = "#{_GITHUB_REPOSITORY_NAME_}#"
 
 @NonCPS
 def getLogin(String json) {
@@ -82,6 +84,16 @@ def gradlew(args)
 }
 
 @NonCPS
+def appendAdditionalCommand(fileName, additionalCustomCommands) {
+    def value = '';
+    if (fileExists(fileName)) {
+        value = readFile(fileName);
+    }
+    value += '\n\n'+ additionalCustomCommands;
+    writeFile file: fileName, text: value
+}
+
+@NonCPS
 def sonarqube(args)
 {
 	print "Running sonar with arguments : ${args}"
@@ -98,6 +110,12 @@ node ("pr-agent") {
 			def bundlesDir = new File("bundles");
 			if (bundlesDir.exists()) 
 				bundlesDir.deleteDir();
+
+			def url = "${env.URL_GRADLE_ADDITIONAL_CUSTOM_COMMANDS}";
+			def additionalCustomCommands = new URL(url).getText();
+			additionalCustomCommands = additionalCustomCommands.replace("#{_SONAR_PROJECT_NAME_}", "${projectName}")
+			additionalCustomCommands = additionalCustomCommands.replace("#{_SONAR_PROJECT_KEY_}", "${projectKey}")
+			appendAdditionalCommand("build.gradle", additionalCustomCommands) ;
 			
 			gradlew 'clean'
 		}
