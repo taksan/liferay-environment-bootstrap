@@ -1,1 +1,1 @@
-sudo docker build --no-cache=true -t 'sonar-on-mysql' .
+sudo docker build -t 'sonar-on-mysql' .

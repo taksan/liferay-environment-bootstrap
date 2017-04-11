@@ -119,7 +119,8 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
         userInRoles              :[
             "Administrators"     : administrators, 
             "Developers"         : developers, 
-            "Customers"          : customers
+            "Customers"          : customers,
+            "Users"              : [ "gs-task-board" ]
         ],
         issueTypeScheme         : "20480",
         workflowScheme          : "17180",

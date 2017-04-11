@@ -93,6 +93,7 @@ SONAR_PASSWORD=$(cat sonar.password)
 if [[ -e /var/log/sonar.log ]]; then
     mv /var/log/sonar.log /var/log/sonar.log.$(date +%Y%m%d%H%M%S)
 fi
+
 java -jar lib/sonar-application-$SONAR_VERSION.jar \
   -Dsonar.log.console=true \
   -Dsonar.jdbc.username="sonar" \
@@ -100,6 +101,7 @@ java -jar lib/sonar-application-$SONAR_VERSION.jar \
   -Dsonar.jdbc.url="$SONARQUBE_JDBC_URL" \
   -Dsonar.web.javaAdditionalOpts="$SONARQUBE_WEB_JVM_OPTS -Djava.security.egd=file:/dev/./urandom" \
   "$@" | tee /var/log/sonar.log &
+PID=$!
 
 if $FIRST_TIME; then
     echo "## Waiting sonar startup"
@@ -141,4 +143,4 @@ if $FIRST_TIME; then
 EOF
 fi
 
-fg
+wait $PID

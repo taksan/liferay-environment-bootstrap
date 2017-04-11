@@ -25,7 +25,7 @@
     <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachFileRecurse java.io.File groovy.lang.Closure</string>
     <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods renameTo java.io.File java.lang.String</string>
     <string>method java.util.Properties setProperty java.lang.String java.lang.String</string>
-    <string>new java.util.Properties<string>
+    <string>new java.util.Properties</string>
   </approvedSignatures>
   <aclApprovedSignatures/>
   <approvedClasspathEntries/>

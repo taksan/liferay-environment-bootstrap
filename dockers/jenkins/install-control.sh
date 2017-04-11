@@ -34,7 +34,9 @@ function match()
     grep -q "$@" $OUT
 }
 
-if [[ $SCRIPT_NAME = "/adminUserExists" ]]; then
+if [[ $SCRIPT_NAME = "/waitJenkinsReady" ]]; then
+    INSTRUCTIONS="Waiting jenkins restart..."
+    JS="setTimeout(function() { document.location='/waitJenkinsReady'; }, 200)"
     exit 0
 fi
 
@@ -98,6 +100,9 @@ if match "plugin-setup-wizard-container"; then
 
         // prevent user from choosing to skip configuration option
         document.querySelector('.skip-first-user').style.display='none'
+        document.querySelector('.save-first-user').addEventListener('click', function() {
+            setTimeout(function() { document.location.reload(true); }, 100)
+        });
     }).observe(document, {subtree: true, childList: true});
 "    
     generateInstructions
