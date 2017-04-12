@@ -1,0 +1,14 @@
+[Unit]
+Description=Sonar service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/etc/init.d/sonar-service start
+ExecStop=/etc/init.d/sonar-service stop
+StandardOutput=tty
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

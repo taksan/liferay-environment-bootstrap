@@ -1,6 +1,6 @@
 FROM openjdk:8
 
-MAINTAINER David Gageot <david.gageot@sonarsource.com>
+MAINTAINER Gabriel Takeuchi <gabriel.takeuchi@objective.com.br>
 
 ENV SONAR_VERSION=6.3 \
     SONARQUBE_HOME=/opt/sonarqube 

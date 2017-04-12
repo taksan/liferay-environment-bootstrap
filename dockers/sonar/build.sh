@@ -1,1 +1,1 @@
-sudo docker build -t 'sonar-on-mysql' .
+sudo docker build -t 'devopsobj/sonar-with-database' .

@@ -1,0 +1,36 @@
+#! /bin/sh
+
+do_start() {
+    docker rm -f  lf-sonar 2>/dev/null
+    docker run --privileged=true -p 9000:9000 --name lf-sonar -p 3306:3306 -v /opt/sonar-data:/opt/sonarqube/data  -v /opt/sonar-mysql:/var/lib/mysql -it devopsobj/sonar-with-database
+}
+
+do_stop() {
+    docker stop lf-sonar
+    docker rm -f  lf-sonar 2>/dev/null
+}
+
+case "$1" in
+  start)
+    do_start
+    ;;
+  stop)
+    do_stop
+    ;;
+  restart)
+    do_stop
+    do_start
+    ;;
+  update)
+    do_stop
+    docker pull devopsobj/sonar-with-database
+    do_start
+    ;;
+  *)
+    echo "Usage: /etc/init.d/sonar-service {start|stop|restart|update}"
+    exit 1
+    ;;
+esac
+
+exit 0
+

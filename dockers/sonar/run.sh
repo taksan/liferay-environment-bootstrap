@@ -43,6 +43,8 @@ function readpassword()
     eval "$1=$PASSWORD"exec 
 }
 
+SONAR_PASS_FILE=$SONARQUBE_HOME/data/sonar.password 
+
 if [ "${1:0:1}" != '-' ]; then
   exec "$@"
 fi
@@ -72,26 +74,27 @@ else
     # this might either be true because of an external directory setup or because this is a docker start
 	startmysql
 fi 
-mysql=( mysql -uroot -hlocalhost --password=$(cat /etc/mysql.root.password))
 
 
 SONARQUBE_JDBC_URL=jdbc:mysql://localhost:3306/sonar?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true
 
 cd $SONARQUBE_HOME
 FIRST_TIME=false
-if [[ ! -e sonar.password ]]; then
+if [[ ! -e $SONAR_PASS_FILE ]]; then
     echo "## Sonar setup"
+    mysql=( mysql -uroot -hlocalhost --password=$(cat /etc/mysql.root.password))
     FIRST_TIME=true
     echo "## Type sonar user's password (user will be sonar)"
     readpassword SONAR_PASSWORD sonar
 
     echo "CREATE USER 'sonar'@'%' IDENTIFIED BY '$SONAR_PASSWORD' ;" | "${mysql[@]}"
-    echo $SONAR_PASSWORD > $SONARQUBE_HOME/sonar.password
+    echo $SONAR_PASSWORD > $SONAR_PASS_FILE
 fi
+LOG_FILE=$SONARQUBE_HOME/data/sonar.log
 
-SONAR_PASSWORD=$(cat sonar.password)
-if [[ -e /var/log/sonar.log ]]; then
-    mv /var/log/sonar.log /var/log/sonar.log.$(date +%Y%m%d%H%M%S)
+SONAR_PASSWORD=$(cat $SONAR_PASS_FILE)
+if [[ -e $LOG_FILE ]]; then
+    mv $LOG_FILE $LOG_FILE.$(date +%Y%m%d%H%M%S)
 fi
 
 java -jar lib/sonar-application-$SONAR_VERSION.jar \
@@ -100,12 +103,12 @@ java -jar lib/sonar-application-$SONAR_VERSION.jar \
   -Dsonar.jdbc.password="$SONAR_PASSWORD" \
   -Dsonar.jdbc.url="$SONARQUBE_JDBC_URL" \
   -Dsonar.web.javaAdditionalOpts="$SONARQUBE_WEB_JVM_OPTS -Djava.security.egd=file:/dev/./urandom" \
-  "$@" | tee /var/log/sonar.log &
+  "$@" | tee $LOG_FILE &
 PID=$!
 
 if $FIRST_TIME; then
     echo "## Waiting sonar startup"
-    while ! grep -q "SonarQube is up" /var/log/sonar.log; do
+    while ! grep -q "SonarQube is up" $LOG_FILE; do
         sleep 1
     done
     echo
@@ -124,16 +127,19 @@ if $FIRST_TIME; then
     echo "Sonar basic setup complete." 
     cat << EOF
         #########################################################
-        # Access sonar at http://localhost:9000                 #
+        #                                                       #
+        # Setup is complete. Re-run the command to start sonar  #
+        # It will be available at http://<sonar host>:9000.     #
         #                                                       #
         # Admin user and password:                              #
-        #                          admin/admin                  #
+        #                     admin/admin                       #
         #                                                       #
         # Access sonar and change the password if you wish      #
         #                                                       #
-        # To complete setup, access the following URL:          #
+        # Setup is complete. Re-run the command to start sonar  #
+        # and complete the setup accessing:                     #
         #                                                       #
-        #    http://localhost:9000/settings/?category=web       #
+        #    http://<sonar host>:9000/settings/?category=web    #
         #                                                       #
         # And enter the following in the 'File suffixes' input: #
         #                                                       #
@@ -141,6 +147,7 @@ if $FIRST_TIME; then
         #                                                       #
         #########################################################
 EOF
+    exit 0
 fi
 
 wait $PID
