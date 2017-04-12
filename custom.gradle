@@ -1,0 +1,41 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+
+  dependencies {
+    classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.3"
+  }
+}
+apply plugin: "org.sonarqube"
+
+import groovy.io.FileType;
+allprojects {
+	apply plugin: "jacoco"
+	jacoco{
+		group = "Coverage"
+		description = "Generate Jacoco coverage reports after running tests."
+	}
+}
+
+sonarqube {
+	def generated = [];
+	new File(".").eachFileRecurse(FileType.FILES) { file ->
+		if (!file.getName().endsWith(".java")) return;
+		if (!file.text.contains("* @generated")) return;
+		generated.add(file.getPath().replaceAll("^.*src/","src/"));
+	}
+
+	def filesExcludedFromAnalysis = generated.join(",")
+	properties {
+		property "sonar.projectName", "#{_SONAR_PROJECT_NAME_}"
+		property "sonar.projectKey", "#{_SONAR_PROJECT_KEY_}"
+		property "sonar.jacoco.reportPath", "${project.buildDir}/jacoco/test.exec"
+		property "sonar.jacoco.reportMissing.force.zero", "true"
+		property "sonar.coverage.exclusions", filesExcludedFromAnalysis
+		property "sonar.exclusions", filesExcludedFromAnalysis
+	}
+}
+
