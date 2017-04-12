@@ -1,0 +1,37 @@
+#! /bin/sh
+
+do_start() {
+    iptables -I INPUT 4 -i docker0 -j ACCEPT
+    docker rm -f  lf-taskboard 2>/dev/null
+    docker run --privileged=true -p 8082:8082 --name lf-taskboard -v /opt/taskboard-data:/opt/taskboard_config -d -t devopsobj/objective-taskboard
+}
+
+do_stop() {
+    docker stop lf-taskboard
+    docker rm -f  lf-taskboard 2>/dev/null
+}
+
+case "$1" in
+  start)
+    do_start
+    ;;
+  stop)
+    do_stop
+    ;;
+  restart)
+    do_stop
+    do_start
+    ;;
+  update)
+    do_stop
+    docker pull devopsobj/objective-taskboard
+    do_start
+    ;;
+  *)
+    echo "Usage: /etc/init.d/taskboard-service {start|stop|restart|update}"
+    exit 1
+    ;;
+esac
+
+exit 0
+

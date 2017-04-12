@@ -1,0 +1,15 @@
+[Unit]
+Description=Jenkins service
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/etc/init.d/jenkins-service start
+ExecStop=/etc/init.d/jenkins-service stop
+StandardOutput=tty
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

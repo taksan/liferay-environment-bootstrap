@@ -1,0 +1,36 @@
+#! /bin/sh
+
+do_start() {
+    docker rm -f  lf-jenkins2>/dev/null
+    docker run --privileged=true -p 8080:8080 --name lf-jenkins -v /opt/jenkins-data:/var/lib/jenkins/ -d -it devopsobj/liferay-jenkins
+}
+
+do_stop() {
+    docker stop lf-jenkins
+    docker rm -f  lf-jenkins 2>/dev/null
+}
+
+case "$1" in
+  start)
+    do_start
+    ;;
+  stop)
+    do_stop
+    ;;
+  restart)
+    do_stop
+    do_start
+    ;;
+  update)
+    do_stop
+    docker pull devopsobj/liferay-jenkins
+    do_start
+    ;;
+  *)
+    echo "Usage: /etc/init.d/jenkins-service {start|stop|restart|update}"
+    exit 1
+    ;;
+esac
+
+exit 0
+

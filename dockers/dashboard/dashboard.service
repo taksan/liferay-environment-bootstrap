@@ -1,0 +1,14 @@
+[Unit]
+Description=Dashboard service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/etc/init.d/dashboard-service start
+ExecStop=/etc/init.d/dashboard-service stop
+StandardOutput=tty
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

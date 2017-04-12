@@ -1,0 +1,14 @@
+[Unit]
+Description=Taskboard service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/etc/init.d/taskboard-service start
+ExecStop=/etc/init.d/taskboard-service stop
+StandardOutput=tty
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
