@@ -26,7 +26,7 @@ properties([disableConcurrentBuilds(),
 ])
 
 def stringParameter(name, description) {
-    return [ name: name, description: description, $class: 'StringParameterDefinition', ]
+    return [ name: name, description: description, $class: 'StringParameterDefinition']
 }
 
 def autocompleteParameter(name, description) {
@@ -284,6 +284,28 @@ def asJson(data) {
     return new JsonBuilder(data).toPrettyString();
 }
 
+def isJobPropertiesObsolete() {
+    def shouldHave = []
+    for (e in Jenkins.instance.getItem(JOB_NAME).properties) {
+        if (e.key instanceof hudson.model.ParametersDefinitionProperty.DescriptorImpl) {
+            shouldHave = e.value.parameterDefinitionNames
+        }   
+    }
+    
+    boolean isObsolete = false;
+    def envvars = env.getEnvironment()
+    for (e in shouldHave) {
+        if (envvars.get(e) == null) {
+            println "MISSING VARIABLE $e"
+            isObsolete = true.
+        }
+    }
+    shouldHave = null;
+    envvars = null;
+
+    return isObsolete;
+}
+
 node {
     GITHUB_REPOS_API_ENDPOINT = "repos/${ORGANIZATION}"
     stage('Pre validation') {
@@ -304,18 +326,8 @@ node {
     }
 
     stage("Parameter existence validation") {
-        try {
-            println "JiraKey = $JiraKey"
-            println "JiraProjectName = $JiraProjectName"
-            println "GithubRepoName = $GithubRepoName"
-            println "ProjectDescription = $ProjectDescription"
-            println "ProjectOwner = $ProjectOwner"
-            println "JiraAdministrators = $JiraAdministrators"
-            println "JiraDevelopers = $JiraDevelopers"
-            println "JiraCustomers = $JiraCustomers"
-        }
-        catch (MissingPropertyException e) {
-            println "Some of the parameters are missing. It might be due to obsolete JenkinsFile. Retry your build"
+        if (!isJobPropertiesObsolete()) {
+            println "Some of the build parameters are missing. It might be due to obsolete JenkinsFile. Retry your build"
             return;
         }  
     }
