@@ -18,9 +18,9 @@ properties([disableConcurrentBuilds(),
             stringParameter("GithubRepoName","Github Repo Name. The repo will become github.com/<ORGANIZATION>/<given name>"),
             stringParameter("ProjectDescription","Project Description"),
             choiceParameter("ProjectOwner", "Project's owner user", "PT_SINGLE_SELECT"),
-            choiceParameter("JiraAdministrators", "Project's administrators", "PT_MULTI_SELECT"),
-            choiceParameter("JiraDevelopers", "Project's developers", "PT_MULTI_SELECT"),
-            choiceParameter("JiraCustomers", "Project's customer users", "PT_MULTI_SELECT")
+            autocompleteParameter("JiraAdministrators", "Project's administrators"),
+            autocompleteParameter("JiraDevelopers", "Project's developers"),
+            autocompleteParameter("JiraCustomers", "Project's customer users")
         ]
     ]
 ])
@@ -29,48 +29,36 @@ def stringParameter(name, description) {
     return [ name: name, description: description, $class: 'StringParameterDefinition', ]
 }
 
-def choiceParameter(name, description, choiceType) {
-    return [
-        name: name, 
-        $class: 'ChoiceParameter', 
-        choiceType: choiceType, 
-        description: description,
-        filterable: false, 
-        randomName: "$name-91356231368852", 
-        script: [$class: 'GroovyScript', 
-            fallbackScript: [classpath: [], sandbox: false, script: 'return ["igor.arouca"];'], 
-            script: [classpath: [], sandbox: false, script: fetchJiraUsersScript()]
-        ]
-    ]    
+def autocompleteParameter(name, description) {
+	return [
+		$class: 'AutoCompleteStringParameterDefinition', 
+		name: name, 
+		description: description, 
+		defaultValue: '', 
+		allowUnrecognizedTokens: false, 
+		displayExpression: 'displayName', 
+		valueExpression: 'name',
+		dataProvider: jiraDataProvider()
+		];
 }
 
-def fetchJiraUsersScript()
-{
-    return '''
-        import groovy.json.JsonSlurper;
-        import java.net.URL;
-        import java.util.Base64;
-        import jenkins.model.Jenkins;
-        import java.util.Map;
-        import java.util.LinkedHashMap;
-        import jenkins.plugins.http_request.HttpRequestGlobalConfig;
+def choiceParameter(name, description) {
+	return [
+		$class: 'DropdownAutocompleteParameterDefinition', 
+		name: name,
+		description: '', 
+		defaultValue: '', 
+		displayExpression: 'displayName',
+		valueExpression: 'name',
+		dataProvider: jiraDataProvider()
+		];
+}
 
-        def httpBasicAuth = HttpRequestGlobalConfig.get().basicDigestAuthentications;
-        def jiraCredentials = null;
-        for (it in httpBasicAuth) {
-            if (it.keyName == "jiraCredentials")
-                jiraCredentials = it;
-        }
-
-        final user = jiraCredentials.userName;
-        final password = jiraCredentials.password;
-        final JIRA_ENDPOINT = Jenkins.instance.getGlobalNodeProperties()[0].getEnvVars().get("JIRA_REST_ENDPOINT");
-
-        auth = Base64.getEncoder().encodeToString((user + ":" + password).getBytes());
-        users = new JsonSlurper().parseText(new URL("${JIRA_ENDPOINT}/projectbuilder/1.0/users").getText(requestProperties: ['Authorization': "Basic ${auth}"]))
-
-        return users.inject([:]){map, u-> map << [(u.name): u.displayName] }
-        '''
+def jiraDataProvider() {
+	return [ 
+		$class: 'RemoteDataProvider', 
+		autoCompleteUrl: "${JIRA_ENDPOINT}/projectbuilder/1.0/users", 
+		credentialsId: JIRA_CREDENTIALS_ID] 
 }
 
 def createGithubProject(leaderMail, jiraProjectName, repoName, description)
