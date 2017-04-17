@@ -57,7 +57,7 @@ def choiceParameter(name, description) {
 def jiraDataProvider() {
     return [ 
         $class: 'RemoteDataProvider', 
-        autoCompleteUrl: "${env.JIRA_REST_ENDPOINT}/projectbuilder/1.0/users", 
+        autoCompleteUrl: "\$JIRA_REST_ENDPOINT/projectbuilder/1.0/users", 
         credentialsId: JIRA_CREDENTIALS_ID] 
 }
 
