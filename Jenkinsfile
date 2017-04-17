@@ -17,7 +17,7 @@ properties([disableConcurrentBuilds(),
             stringParameter("JiraProjectName","Project name"),
             stringParameter("GithubRepoName","Github Repo Name. The repo will become github.com/<ORGANIZATION>/<given name>"),
             stringParameter("ProjectDescription","Project Description"),
-            choiceParameter("ProjectOwner", "Project's owner user", "PT_SINGLE_SELECT"),
+            choiceParameter("ProjectOwner", "Project's owner user"),
             autocompleteParameter("JiraAdministrators", "Project's administrators"),
             autocompleteParameter("JiraDevelopers", "Project's developers"),
             autocompleteParameter("JiraCustomers", "Project's customer users")
@@ -57,9 +57,10 @@ def choiceParameter(name, description) {
 def jiraDataProvider() {
 	return [ 
 		$class: 'RemoteDataProvider', 
-		autoCompleteUrl: "${JIRA_ENDPOINT}/projectbuilder/1.0/users", 
+		autoCompleteUrl: "${env.JIRA_REST_ENDPOINT}/projectbuilder/1.0/users", 
 		credentialsId: JIRA_CREDENTIALS_ID] 
 }
+
 
 def createGithubProject(leaderMail, jiraProjectName, repoName, description)
 {
