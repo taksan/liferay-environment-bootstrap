@@ -30,35 +30,35 @@ def stringParameter(name, description) {
 }
 
 def autocompleteParameter(name, description) {
-	return [
-		$class: 'AutoCompleteStringParameterDefinition', 
-		name: name, 
-		description: description, 
-		defaultValue: '', 
-		allowUnrecognizedTokens: false, 
-		displayExpression: 'displayName', 
-		valueExpression: 'name',
-		dataProvider: jiraDataProvider()
-		];
+    return [
+        $class: 'AutoCompleteStringParameterDefinition', 
+        name: name, 
+        description: description, 
+        defaultValue: '', 
+        allowUnrecognizedTokens: false, 
+        displayExpression: 'displayName', 
+        valueExpression: 'name',
+        dataProvider: jiraDataProvider()
+        ];
 }
 
 def choiceParameter(name, description) {
-	return [
-		$class: 'DropdownAutocompleteParameterDefinition', 
-		name: name,
-		description: '', 
-		defaultValue: '', 
-		displayExpression: 'displayName',
-		valueExpression: 'name',
-		dataProvider: jiraDataProvider()
-		];
+    return [
+        $class: 'DropdownAutocompleteParameterDefinition', 
+        name: name,
+        description: '', 
+        defaultValue: '', 
+        displayExpression: 'displayName',
+        valueExpression: 'name',
+        dataProvider: jiraDataProvider()
+        ];
 }
 
 def jiraDataProvider() {
-	return [ 
-		$class: 'RemoteDataProvider', 
-		autoCompleteUrl: "${env.JIRA_REST_ENDPOINT}/projectbuilder/1.0/users", 
-		credentialsId: JIRA_CREDENTIALS_ID] 
+    return [ 
+        $class: 'RemoteDataProvider', 
+        autoCompleteUrl: "${env.JIRA_REST_ENDPOINT}/projectbuilder/1.0/users", 
+        credentialsId: JIRA_CREDENTIALS_ID] 
 }
 
 
@@ -251,14 +251,14 @@ def createJobFromTemplate(jobName, templateFile, varMap) {
 }
 
 def createProjectJobs(githubRepoName) {
-	createJobFromTemplate(githubRepoName+"-pr-builder", "pullRequestBuilderJob.tpl", [
+    createJobFromTemplate(githubRepoName+"-pr-builder", "pullRequestBuilderJob.tpl", [
         _SCM_SOURCE_ID_          : java.util.UUID.randomUUID().toString(),
         _GITHUB_CREDENTIALS_ID_  : GITHUB_CREDENTIALS_ID,
         _GITHUB_REPOSITORY_NAME_ : githubRepoName,
         _GITHUB_ORGANIZATION_    : ORGANIZATION,
     ])
 
-	createJobFromTemplate(githubRepoName+"-bundle-build", "bundle-build-config.tpl", [
+    createJobFromTemplate(githubRepoName+"-bundle-build", "bundle-build-config.tpl", [
         _SCM_SOURCE_ID_          : java.util.UUID.randomUUID().toString(),
         _GITHUB_CREDENTIALS_ID_  : GITHUB_CREDENTIALS_ID,
         _GITHUB_REPOSITORY_NAME_ : githubRepoName,
