@@ -11,7 +11,7 @@ def onError() {
     handleError(gitRepository, "#{_LEADER_MAIL_}", "#{_GITHUB_CREDENTIALS_ID_}")
 }
 
-node ("pr-agent") {
+node ("#{_GITHUB_REPOSITORY_NAME_}") {
 	try {
 		stage('Checkout') {
 			checkout scm
