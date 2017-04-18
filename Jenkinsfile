@@ -343,9 +343,8 @@ node {
     }
 
     stage("Parameter existence validation") {
-        if (!isJobPropertiesObsolete()) {
-            println "Some of the build parameters are missing. It might be due to obsolete JenkinsFile. Retry your build"
-            return;
+        if (isJobPropertiesObsolete()) {
+            throw new IllegalArgumentException("Some of the build parameters are missing. It might be due to obsolete JenkinsFile. Retry your build");
         }  
     }
 
