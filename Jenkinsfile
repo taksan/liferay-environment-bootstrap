@@ -301,7 +301,7 @@ def isJobPropertiesObsolete() {
     for (e in shouldHave) {
         if (envvars.get(e) == null) {
             println "MISSING VARIABLE $e"
-            isObsolete = true.
+            isObsolete = true;
         }
     }
     shouldHave = null;
