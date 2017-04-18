@@ -4,6 +4,8 @@ import groovy.transform.Field
 import groovy.json.*
 import java.util.Base64;
 import java.lang.IllegalArgumentException;
+import com.michelin.cio.hudson.plugins.rolestrategy.RoleBasedAuthorizationStrategy;
+import static com.michelin.cio.hudson.plugins.rolestrategy.RoleBasedAuthorizationStrategy.PROJECT;
 
 @Field final GITHUB_CREDENTIALS_ID = "githubCredentials";
 @Field final JIRA_CREDENTIALS_ID = "jiraCredentials";
@@ -256,6 +258,7 @@ def createProjectJobs(githubRepoName) {
         _GITHUB_CREDENTIALS_ID_  : GITHUB_CREDENTIALS_ID,
         _GITHUB_REPOSITORY_NAME_ : githubRepoName,
         _GITHUB_ORGANIZATION_    : ORGANIZATION,
+        _JIRA_KEY_               : JiraKey
     ])
 
     createJobFromTemplate(githubRepoName+"-bundle-build", "bundle-build-config.tpl", [
@@ -263,6 +266,7 @@ def createProjectJobs(githubRepoName) {
         _GITHUB_CREDENTIALS_ID_  : GITHUB_CREDENTIALS_ID,
         _GITHUB_REPOSITORY_NAME_ : githubRepoName,
         _GITHUB_ORGANIZATION_    : ORGANIZATION,
+        _JIRA_KEY_               : JiraKey
     ])
 }
 
@@ -304,6 +308,19 @@ def isJobPropertiesObsolete() {
     envvars = null;
 
     return isObsolete;
+}
+
+def setupPermissionRoles(jiraKey)
+{
+    RoleBasedAuthorizationStrategy strategy = (RoleBasedAuthorizationStrategy)Jenkins.getInstance().getAuthorizationStrategy();
+    projectRoleMap = strategy.getRoleMaps().get(PROJECT);
+    role = projectRoleMap.getRole("@DescriptionMatchMacroRole([{]team:{SID}[}])")
+    if (role == null) {
+        println "It's not possible to team role because the required role doesn't exist"
+        return;
+    }
+
+    projectRoleMap.assignRole(role,jiraKey);
 }
 
 node {
@@ -348,11 +365,14 @@ node {
     }
 
     stage("Dashboard project creation") {
-//        createDashingConfiguration(JiraKey);
+        createDashingConfiguration(JiraKey);
     }
 
     stage("Taskboard project setup") {
-//        updateTaskboardConfiguration(JiraKey, ProjectOwner);
+        updateTaskboardConfiguration(JiraKey, ProjectOwner);
     }
 
+    stage("Setting up project permission scheme on Jenkins") {
+        setupPermissionRoles(JiraKey);
+    }
 }

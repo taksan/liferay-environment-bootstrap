@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <flow-definition plugin="workflow-job@2.10">
   <actions/>
-  <description/>
+  <description>
+    This jobs uploads the build to nexus.<br>
+
+    {team:#{_JIRA_KEY_}}
+  </descript>
   <keepDependencies>false</keepDependencies>
   <properties>
     <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.26.0">
