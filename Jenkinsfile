@@ -153,7 +153,7 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
             url: "${JIRA_REST_ENDPOINT}/projectbuilder/1.0/project", consoleLogResponseBody: VERBOSE_REQUESTS, validResponseCodes: "100:599"
 
     if (resp.status != 200) {
-        println resp
+        println resp.content
         println "Could not create jira project: Here's the sent data:"
         println json
         throw new IllegalStateException("Jira project creation failed.");
