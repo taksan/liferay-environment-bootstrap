@@ -100,19 +100,10 @@ def createGithubProject(leaderMail, jiraProjectName, repoName, description)
 def createJiraProject(jiraKey, jiraName, description, lead, administrators, developers, customers)
 {
     lead = lead.split("\\|")[0].trim();
-    def json = asJson([
-        key                      : jiraKey,
-        name                     : jiraName,
-        description              : description,
-        projectTypeKey           : "business",
-        projectTemplateKey       : "com.atlassian.jira-core-project-templates:jira-core-project-management",
-        lead                     : lead,
-        userInRoles              :[
-            "Administrators"     : administrators, 
-            "Developers"         : developers, 
-            "Customers"          : customers,
-            "Users"              : [ "gs-task-board" ]
-        ],
+    if (lead.empty) 
+        throw new IllegalStateException("You must provide the project owner");
+
+    def projectHardData =  [
         issueTypeScheme         : "20480",
         workflowScheme          : "17180",
         issueTypeScreenScheme   : "14450",
@@ -137,15 +128,35 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
             [ id: "18520", schemeId: "19781" ], 
             [ id: "18621", schemeId: "19981" ], 
             [ id: "18622", schemeId: "19982" ] ]
-    ]);
+    ];
+    if (env.OVERRIDE_DATA) {
+        projectHardData = new JsonSlurper().parseText(env.OVERRIDE_DATA);
+    }
 
-    try {
-        httpRequest acceptType: 'APPLICATION_JSON', authentication: JIRA_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, 
-            url: "${JIRA_REST_ENDPOINT}/projectbuilder/1.0/project", consoleLogResponseBody: VERBOSE_REQUESTS
-    }catch(Exception e) {
-        println "Could not create jira project. Failed request body"
+    def json = asJson([
+            key                      : jiraKey,
+            name                     : jiraName,
+            description              : description,
+            lead                     : lead,
+            userInRoles              :[
+                "Administrators"     : administrators, 
+                "Developers"         : developers, 
+                "Customers"          : customers,
+                "Users"              : [ "gs-task-board" ],
+            ],
+            projectTypeKey           : "business",
+            projectTemplateKey       : "com.atlassian.jira-core-project-templates:jira-core-project-management"
+        ] + projectHardData);
+    projectHardData = null;
+
+    resp = httpRequest acceptType: 'APPLICATION_JSON', authentication: JIRA_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, 
+            url: "${JIRA_REST_ENDPOINT}/projectbuilder/1.0/project", consoleLogResponseBody: VERBOSE_REQUESTS, validResponseCodes: "100:599"
+
+    if (resp.status != 200) {
+        println resp
+        println "Could not create jira project: Here's the sent data:"
         println json
-        throw e;
+        throw new IllegalStateException("Jira project creation failed.");
     }
 }
 
