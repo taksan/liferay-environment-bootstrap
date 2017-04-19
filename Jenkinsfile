@@ -5,6 +5,7 @@ import groovy.json.*
 import java.util.Base64;
 import java.lang.IllegalArgumentException;
 import com.michelin.cio.hudson.plugins.rolestrategy.RoleBasedAuthorizationStrategy;
+import hudson.model.ListView;
 import static com.michelin.cio.hudson.plugins.rolestrategy.RoleBasedAuthorizationStrategy.PROJECT;
 
 @Field final GITHUB_CREDENTIALS_ID = "githubCredentials";
@@ -279,6 +280,17 @@ def createProjectJobs(githubRepoName) {
         _GITHUB_ORGANIZATION_    : ORGANIZATION,
         _JIRA_KEY_               : JiraKey
     ])
+
+    def view = Jenkins.instance.getView(JiraKey);
+    if (view != null) {
+        println "View ${JiraKey} already exists. Skip"
+    }
+    else {
+        view = new ListView(JiraKey, Jenkins.instance);
+        Jenkins.instance.addView(view)
+    }
+    view.add(Jenkins.instance.getItem(githubRepoName+"-pr-builder"))
+    view.add(Jenkins.instance.getItem(githubRepoName+"-bundle-build"))
 }
 
 def execCmd(args){
