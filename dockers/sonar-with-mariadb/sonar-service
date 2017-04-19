@@ -4,16 +4,23 @@ SCRIPT_NAME=$(readlink -f $0)
 CONTAINER=lf-sonar
 IMAGE=devopsobj/sonar-with-mariadatabase
 PORTS="-p 9000:9000 -p 3306:3306"
-VOLUMES="-v /opt/sonar-data:/opt/sonarqube/data  -v /opt/sonar-mysql:/var/lib/mysql"
+VOLUMES="-v /opt/sonar-data:/opt/sonarqube/data  -v /opt/sonar-mariadb:/var/lib/mysql"
 
 do_start() {
     docker rm -f $CONTAINER >/dev/null 2>&1
-    docker run  --name $CONTAINER $PORTS $VOLUMES  -it $IMAGE
+    docker run  --name $CONTAINER $PORTS $VOLUMES -d -it $IMAGE
 }
 
 do_stop() {
     docker stop $CONTAINER
     docker rm -f $CONTAINER 2>/dev/null
+}
+
+do_install() {
+    mkdir -p /opt/sonar-data /opt/sonar-mariadb
+    chcon -Rt svirt_sandbox_file_t /opt/sonar-data /opt/sonar-mariadb
+    docker rm -f $CONTAINER >/dev/null 2>&1
+    docker run  --name $CONTAINER $PORTS $VOLUMES -it $IMAGE
 }
 
 case "$1" in
@@ -31,6 +38,9 @@ case "$1" in
     do_stop
     docker pull $IMAGE
     do_start
+    ;;
+  install)
+    do_install
     ;;
   *)
     echo "Usage: $SCRIPT_NAME {start|stop|restart|update}"

@@ -40,7 +40,7 @@ function readpassword()
 			echo "Passwords don't match"
 		fi  
 	done
-    eval "$1=$PASSWORD"exec 
+    eval "$1=$PASSWORD"
 }
 
 SONAR_PASS_FILE=$SONARQUBE_HOME/data/sonar.password 
@@ -76,7 +76,7 @@ else
 fi 
 
 
-SONARQUBE_JDBC_URL=jdbc:mysql://localhost:3306/sonar?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true
+export SONARQUBE_JDBC_URL="jdbc:mysql://localhost:3306/sonar?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true"
 
 cd $SONARQUBE_HOME
 FIRST_TIME=false
@@ -87,7 +87,14 @@ if [[ ! -e $SONAR_PASS_FILE ]]; then
     echo "## Type sonar user's password (user will be sonar)"
     readpassword SONAR_PASSWORD sonar
 
-    echo "CREATE USER 'sonar'@'%' IDENTIFIED BY '$SONAR_PASSWORD' ;" | "${mysql[@]}"
+    cat <<EOF  | "${mysql[@]}"
+    CREATE DATABASE sonar CHARACTER SET utf8 COLLATE utf8_general_ci;
+    CREATE USER 'sonar'@'%' IDENTIFIED BY '$SONAR_PASSWORD' ;
+    GRANT ALL ON sonar.* TO 'sonar'@'%' IDENTIFIED BY 'sonar';
+    GRANT ALL ON sonar.* TO 'sonar'@'localhost' IDENTIFIED BY 'sonar';
+    FLUSH PRIVILEGES;
+EOF
+
     echo $SONAR_PASSWORD > $SONAR_PASS_FILE
 fi
 LOG_FILE=$SONARQUBE_HOME/data/sonar.log
@@ -96,6 +103,14 @@ SONAR_PASSWORD=$(cat $SONAR_PASS_FILE)
 if [[ -e $LOG_FILE ]]; then
     mv $LOG_FILE $LOG_FILE.$(date +%Y%m%d%H%M%S)
 fi
+
+echo java -jar lib/sonar-application-$SONAR_VERSION.jar \
+  -Dsonar.log.console=true \
+  -Dsonar.jdbc.username="sonar" \
+  -Dsonar.jdbc.password="$SONAR_PASSWORD" \
+  -Dsonar.jdbc.url="$SONARQUBE_JDBC_URL" \
+  -Dsonar.web.javaAdditionalOpts="$SONARQUBE_WEB_JVM_OPTS -Djava.security.egd=file:/dev/./urandom" \
+  "$@" 
 
 java -jar lib/sonar-application-$SONAR_VERSION.jar \
   -Dsonar.log.console=true \
