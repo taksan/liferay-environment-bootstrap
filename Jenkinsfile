@@ -329,17 +329,25 @@ def isJobPropertiesObsolete() {
     return isObsolete;
 }
 
+@NonCPS
 def setupPermissionRoles(jiraKey)
 {
-    RoleBasedAuthorizationStrategy strategy = (RoleBasedAuthorizationStrategy)Jenkins.getInstance().getAuthorizationStrategy();
-    projectRoleMap = strategy.getRoleMaps().get(PROJECT);
-    role = projectRoleMap.getRole("@DescriptionMatchMacroRole([{]team:{SID}[}])")
-    if (role == null) {
-        println "It's not possible to team role because the required role doesn't exist"
-        return;
-    }
+    def strategy = Jenkins.instance.authorizationStrategy;
+    def projectRoleMap = strategy.roleMaps.get(PROJECT);
+    def role = projectRoleMap.getRole("@DescriptionMatchMacroRole([{]team:{SID}[}])")
 
-    projectRoleMap.assignRole(role,jiraKey);
+    try {
+        if (role == null) {
+            println "It's not possible to team role because the required role doesn't exist"
+            return;
+        }
+        println "Assign $jiraKey to role $role"
+        projectRoleMap.assignRole(role,jiraKey);
+    }finally {
+        strategy = null;
+        projectRoleMap = null;
+        role = null;
+    }
 }
 
 node {
