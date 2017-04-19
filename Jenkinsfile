@@ -72,9 +72,13 @@ def createGithubProject(leaderMail, jiraProjectName, repoName, description)
         throw new IllegalStateException("Github repo ${repoName} doesn't exist, can't setup repository");
     }
 
-    // project already exists, add missing jenkins file
     addJenkinsfileForExistingProjects(repoName, jiraProjectName, leaderMail);
-    return;
+
+    if (checkFileExists("gradlew", repoName)) {
+        println "Project already initialized, skip"
+        return;
+    }
+    println "New project detected. Initialize it";
 
     def fullRepoName = "${ORGANIZATION}/$repoName"
 
@@ -82,19 +86,9 @@ def createGithubProject(leaderMail, jiraProjectName, repoName, description)
     execCmd("rm -rf proj")
 
     clone (fullRepoName, projDir);
-    File jenkinsFile = new File(projDir, "Jenkinsfile");
-    jenkinsFile.write updateTemplateVariables("Jenkinsfile.tpl", [
-        _JIRA_PROJECT_NAME_      : jiraProjectName,
-        _GITHUB_REPOSITORY_NAME_ : repoName,
-        _GITHUB_ORGANIZATION_    : ORGANIZATION,
-        _LEADER_MAIL_            : leaderMail
-    ])
 
-    File buildGradle = new File(projDir, "build.gradle");
-    buildGradle.write updateTemplateVariables("build.gradle.tpl", [
-        _JIRA_PROJECT_NAME_      : jiraProjectName,
-        _GITHUB_REPOSITORY_NAME_ : repoName
-    ]);
+    execCmd("cd proj && blade init");
+
     push(projDir);
 }
 
