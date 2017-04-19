@@ -16,10 +16,12 @@ function main()
     service apache2 start >/dev/null 2>&1
 
     #workflow-step-api.hpi structs.hpi
-    REQUIRED_PLUGINS="http_request.hpi uno-choice.hpi scriptler.hpi role-strategy.hpi  nexus-artifact-uploader.hpi"
+    REQUIRED_PLUGINS="http_request/1.8.13 role-strategy/2.4.0 nexus-artifact-uploader/2.9 cvs/2.13 script-realm/1.5"
     for P in $REQUIRED_PLUGINS; do
         echo "Installing required plugin : $P"
-        wget -q http://updates.jenkins-ci.org/latest/$P -O $JENKINS_HOME/plugins/$P
+        artifact=$(echo $P|cut -d/ -f1)
+        version=$(echo $P|cut -d/ -f2)
+        wget -q http://updates.jenkins-ci.org/plugins/$artifact/$version/$artifact.hpi -O $JENKINS_HOME/plugins/$P
     done
 
     cp instructions_step1.txt current_instructions.txt

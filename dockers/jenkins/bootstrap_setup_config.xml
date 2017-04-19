@@ -144,15 +144,23 @@ node {
     }
     /*
     stage("Authorization setup") {
-		// Set Role Based Authorization Strategy
-		Jenkins.instance.setAuthorizationStrategy(RoleBasedAuthorizationStrategy.DESCRIPTOR.newInstance(null, JSONObject.fromObject(new Object())));
+        // Set Role Based Authorization Strategy
+        Jenkins.instance.setAuthorizationStrategy(RoleBasedAuthorizationStrategy.DESCRIPTOR.newInstance(null, JSONObject.fromObject(new Object())));
 
-		// add global role for all users with minimum read permission
-		RoleBasedAuthorizationStrategy strategy = (RoleBasedAuthorizationStrategy)Jenkins.getInstance().getAuthorizationStrategy();
-		permissions = new LinkedHashSet&lt;Permission&gt;();
-		permissions.add(Permission.fromId("hudson.model.Hudson.Read"))
-		permissions.add(Permission.fromId("hudson.model.View.Read"))
-		strategy.addRole(RoleBasedAuthorizationStrategy.GLOBAL, new Role("allusers-readonly", permissions))
+        // add global role for all users with minimum read permission
+        RoleBasedAuthorizationStrategy strategy = (RoleBasedAuthorizationStrategy)Jenkins.getInstance().getAuthorizationStrategy();
+        permissions = new LinkedHashSet&lt;Permission&gt;();
+        permissions.add(Permission.fromId("hudson.model.Hudson.Read"))
+        permissions.add(Permission.fromId("hudson.model.View.Read"))
+        strategy.addRole(RoleBasedAuthorizationStrategy.GLOBAL, new Role("allusers-readonly", permissions))
+
+
+        permissions = new LinkedHashSet<Permission>();
+        permissions.add(Permission.fromId("hudson.model.Item.Build"))
+        permissions.add(Permission.fromId("hudson.model.Item.Cancel"))
+        permissions.add(Permission.fromId("hudson.model.Item.Discover"))
+        permissions.add(Permission.fromId("hudson.model.Item.Read"))
+        strategy.addRole(RoleBasedAuthorizationStrategy.PROJECT, new Role("@DescriptionMatchMacroRole([{]team:{SID}[}])", permissions))</Permission>
     }*/
 
     stage("Finishing") {

@@ -1,5 +1,5 @@
 apt-get update
-apt-get install -y wget groovy curl gettext git vim less apache2
+apt-get install -y wget groovy curl gettext git vim less apache2 python
 
 a2enmod ext_filter
 a2enmod proxy
