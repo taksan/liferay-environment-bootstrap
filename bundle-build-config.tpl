@@ -2,9 +2,9 @@
 <flow-definition plugin="workflow-job@2.10">
   <actions/>
   <description>
-    This jobs uploads the build to nexus.<br/>
+This jobs uploads the build to nexus.
 
-    {team:#{_JIRA_KEY_}}
+{team:#{_JIRA_KEY_}}
   </description>
   <keepDependencies>false</keepDependencies>
   <properties>
