@@ -100,10 +100,6 @@ def createGithubProject(leaderMail, jiraProjectName, repoName, description)
 
 def createJiraProject(jiraKey, jiraName, description, lead, administrators, developers, customers)
 {
-    lead = lead.split("\\|")[0].trim();
-    if (lead.empty) 
-        throw new IllegalStateException("You must provide the project owner");
-
     def projectHardData =  [
         issueTypeScheme         : "20480",
         workflowScheme          : "17180",
