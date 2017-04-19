@@ -8,7 +8,7 @@ import groovy.transform.Field
 @Field final projectKey  = "#{_GITHUB_REPOSITORY_NAME_}"
 
 def onError() {
-    handleError(gitRepository, "#{_LEADER_MAIL_}", "#{_GITHUB_CREDENTIALS_ID_}")
+	handleError(gitRepository, "#{_LEADER_MAIL_}", "#{_GITHUB_CREDENTIALS_ID_}")
 }
 
 node ("#{_GITHUB_REPOSITORY_NAME_}") {
@@ -22,10 +22,10 @@ node ("#{_GITHUB_REPOSITORY_NAME_}") {
 			if (bundlesDir.exists()) 
 				bundlesDir.deleteDir();
 
-            appendAdditionalCommand("build.gradle", [
-                "_SONAR_PROJECT_NAME_" : projectName,
-                "_SONAR_PROJECT_KEY_"  : projectKey
-            ]) ;
+			appendAdditionalCommand("build.gradle", [
+				"_SONAR_PROJECT_NAME_" : projectName,
+				"_SONAR_PROJECT_KEY_"  : projectKey
+			]) ;
 			
 			gradlew 'clean'
 		}
