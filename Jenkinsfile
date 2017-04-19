@@ -377,7 +377,7 @@ def organization() {
 }
 
 def isEmpty(s) {
-    return s == null || "".equals(GithubOrganization)
+    return s == null || "".equals(s)
 }
 
 node {
@@ -396,7 +396,7 @@ node {
             throw new IllegalStateException("You must set TASKBOARD_END_POINT in the global properties");
 
         if (isEmpty(ProjectOwner)) 
-            throw new IllegalArgumentException("You must provide the team leader")
+            throw new IllegalArgumentException("You must provide the project owner ${ProjectOwner}")
 
         if (isEmpty(GithubRepoName)) 
             throw new IllegalArgumentException("You must provide the git repository name")
