@@ -74,7 +74,7 @@ def createGithubProject(leaderMail, jiraProjectName, repoName, description)
 
     // project already exists, add missing jenkins file
     addJenkinsfileForExistingProjects(repoName, jiraProjectName, leaderMail);
-      return;
+    return;
 
     def fullRepoName = "${ORGANIZATION}/$repoName"
 
@@ -136,9 +136,9 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
             description              : description,
             lead                     : lead,
             userInRoles              :[
-                "Administrators"     : administrators, 
-                "Developers"         : developers, 
-                "Customers"          : customers,
+                "Administrators"     : prepareJenkinsUserList(administrators), 
+                "Developers"         : prepareJenkinsUserList(developers), 
+                "Customers"          : prepareJenkinsUserList(customers),
                 "Users"              : [ "gs-task-board" ],
             ],
             projectTypeKey           : "business",
@@ -348,6 +348,14 @@ def setupPermissionRoles(jiraKey)
         projectRoleMap = null;
         role = null;
     }
+}
+
+@NonCPS
+def prepareJenkinsUserList(array) {
+    for(i = 0; i < array.length; i++) 
+        array[i] = array[i].trim();
+    
+    return array;
 }
 
 node {
