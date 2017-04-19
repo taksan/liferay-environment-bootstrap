@@ -72,12 +72,12 @@ def createGithubProject(leaderMail, jiraProjectName, repoName, description)
         throw new IllegalStateException("Github repo ${repoName} doesn't exist, can't setup repository");
     }
 
-    addJenkinsfileForExistingProjects(repoName, jiraProjectName, leaderMail);
-
     if (checkFileExists("gradlew", repoName)) {
-        println "Project already initialized, skip"
+        addJenkinsfileForExistingProjects(repoName, jiraProjectName, leaderMail);
+        println "Project already initialized, skipping blade init"
         return;
     }
+
     println "New project detected. Initialize it";
 
     def fullRepoName = "${ORGANIZATION}/$repoName"
@@ -87,7 +87,9 @@ def createGithubProject(leaderMail, jiraProjectName, repoName, description)
 
     clone (fullRepoName, projDir);
 
-    execCmd("cd proj && blade init");
+    execCmd("cd proj && blade init -f");
+
+    createJenkinsFile(projDir, repoName, jiraProjectName, leaderMail);
 
     push(projDir);
 }
@@ -162,6 +164,15 @@ def addJenkinsfileForExistingProjects(repoName, jiraProjectName, leaderMail)
     // file is missing, we need to up it there
     File projDir = new File(workspace, "proj");
     projDir.mkdirs();
+
+    jenkinsFile = createJenkinsFile(projDir, repoName, jiraProjectName, leaderMail);
+
+    addFileInRepo(jenkinsFile, repoName) 
+}
+
+def createJenkinsFile(projDir, repoName, jiraProjectName, leaderMail) {
+    File projDir = new File(workspace, "proj");
+    projDir.mkdirs();
     File jenkinsFile = new File(projDir, "Jenkinsfile");
     jenkinsFile.write updateTemplateVariables("Jenkinsfile.tpl", [
         _JIRA_PROJECT_NAME_      : jiraProjectName,
@@ -170,7 +181,7 @@ def addJenkinsfileForExistingProjects(repoName, jiraProjectName, leaderMail)
         _LEADER_MAIL_            : leaderMail
     ])
 
-    addFileInRepo(jenkinsFile, repoName) 
+    return jenkinsFile;
 }
 
 def checkRepoExists(repoName) {
