@@ -171,8 +171,6 @@ def addJenkinsfileForExistingProjects(repoName, jiraProjectName, leaderMail)
 }
 
 def createJenkinsFile(projDir, repoName, jiraProjectName, leaderMail) {
-    File projDir = new File(workspace, "proj");
-    projDir.mkdirs();
     File jenkinsFile = new File(projDir, "Jenkinsfile");
     jenkinsFile.write updateTemplateVariables("Jenkinsfile.tpl", [
         _JIRA_PROJECT_NAME_      : jiraProjectName,
