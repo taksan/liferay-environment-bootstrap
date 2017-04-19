@@ -4,8 +4,8 @@ import groovy.transform.Field
 @Library("liferay-sdlc-jenkins-lib") import static org.liferay.sdlc.SDLCPrUtilities.*
 
 @Field final gitRepository = '#{_GITHUB_ORGANIZATION_}/#{_GITHUB_REPOSITORY_NAME_}'
-@Field final projectName = "#{_JIRA_PROJECT_NAME_}#"
-@Field final projectKey  = "#{_GITHUB_REPOSITORY_NAME_}#"
+@Field final projectName = "#{_JIRA_PROJECT_NAME_}"
+@Field final projectKey  = "#{_GITHUB_REPOSITORY_NAME_}"
 
 def onError() {
     handleError(gitRepository, "#{_LEADER_MAIL_}", "#{_GITHUB_CREDENTIALS_ID_}")

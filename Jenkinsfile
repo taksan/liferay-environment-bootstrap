@@ -23,13 +23,20 @@ properties([disableConcurrentBuilds(),
             choiceParameter("ProjectOwner", "Project's owner user"),
             autocompleteParameter("JiraAdministrators", "Project's administrators"),
             autocompleteParameter("JiraDevelopers", "Project's developers"),
-            autocompleteParameter("JiraCustomers", "Project's customer users")
+            autocompleteParameter("JiraCustomers", "Project's customer users"),
+            stringParameter("GithubOrganization", "(only for non default repo) Github organization"),
+            stringParameter("GithubUsername", "(only for non default repo) github user"),
+            passwordParameter("GithubPassword", "(only for non default repo) github password")
         ]
     ]
 ])
 
 def stringParameter(name, description) {
     return [ name: name, description: description, $class: 'StringParameterDefinition']
+}
+
+def passwordParameter(name, description) {
+    return [ name: name, description: description, $class: 'PasswordParameterDefinition']
 }
 
 def autocompleteParameter(name, description) {
@@ -52,7 +59,7 @@ def choiceParameter(name, description) {
         description: '', 
         defaultValue: '', 
         displayExpression: 'displayName',
-        valueExpression: 'name',
+        valueExpression: '{name+"/"+emailAddress}',
         dataProvider: jiraDataProvider()
         ];
 }
@@ -80,7 +87,7 @@ def createGithubProject(leaderMail, jiraProjectName, repoName, description)
 
     println "New project detected. Initialize it";
 
-    def fullRepoName = "${ORGANIZATION}/$repoName"
+    def fullRepoName = "${organization()}/$repoName"
 
     File projDir = new File(workspace, "proj");
     execCmd("rm -rf proj")
@@ -175,8 +182,9 @@ def createJenkinsFile(projDir, repoName, jiraProjectName, leaderMail) {
     jenkinsFile.write updateTemplateVariables("Jenkinsfile.tpl", [
         _JIRA_PROJECT_NAME_      : jiraProjectName,
         _GITHUB_REPOSITORY_NAME_ : repoName,
-        _GITHUB_ORGANIZATION_    : ORGANIZATION,
-        _LEADER_MAIL_            : leaderMail
+        _GITHUB_ORGANIZATION_    : organization(),
+        _LEADER_MAIL_            : leaderMail,
+        _GITHUB_CREDENTIALS_ID_  : GITHUB_CREDENTIALS_ID
     ])
 
     return jenkinsFile;
@@ -239,10 +247,10 @@ def createDashingConfiguration(jiraKey)
                 consoleLogResponseBody: VERBOSE_REQUESTS 
 }
 
-def updateTaskboardConfiguration(jiraKey, projectOwner)
+def updateTaskboardConfiguration(jiraKey, leaderJiraName)
 {
     httpRequest acceptType: 'APPLICATION_JSON', authentication: TASKBOARD_AUTH_ID, httpMode: 'POST', url: "${TASKBOARD_END_POINT}/api/projects?projectKey=${jiraKey}",
-                requestBody: asJson([projectKey: JiraKey, teamLeader: projectOwner]) ,consoleLogResponseBody: VERBOSE_REQUESTS
+                requestBody: asJson([projectKey: JiraKey, teamLeader: leaderJiraName]) ,consoleLogResponseBody: VERBOSE_REQUESTS
 }
 
 def updateTemplateVariables(templateName, varMap)
@@ -268,7 +276,7 @@ def createProjectJobs(githubRepoName) {
         _SCM_SOURCE_ID_          : java.util.UUID.randomUUID().toString(),
         _GITHUB_CREDENTIALS_ID_  : GITHUB_CREDENTIALS_ID,
         _GITHUB_REPOSITORY_NAME_ : githubRepoName,
-        _GITHUB_ORGANIZATION_    : ORGANIZATION,
+        _GITHUB_ORGANIZATION_    : organization(),
         _JIRA_KEY_               : JiraKey
     ])
 
@@ -276,7 +284,7 @@ def createProjectJobs(githubRepoName) {
         _SCM_SOURCE_ID_          : java.util.UUID.randomUUID().toString(),
         _GITHUB_CREDENTIALS_ID_  : GITHUB_CREDENTIALS_ID,
         _GITHUB_REPOSITORY_NAME_ : githubRepoName,
-        _GITHUB_ORGANIZATION_    : ORGANIZATION,
+        _GITHUB_ORGANIZATION_    : organization(),
         _JIRA_KEY_               : JiraKey
     ])
 
@@ -361,8 +369,19 @@ def prepareJenkinsUserList(array) {
     return array;
 }
 
+def organization() {
+    if (isEmpty(GithubOrganization))
+        return ORGANIZATION;
+
+    return GithubOrganization;
+}
+
+def isEmpty(s) {
+    return s == null || "".equals(GithubOrganization)
+}
+
 node {
-    GITHUB_REPOS_API_ENDPOINT = "repos/${ORGANIZATION}"
+
     stage('Pre validation') {
         if (env.DASHING_END_POINT == null) 
             throw new IllegalStateException("You must set DASHING_END_POINT in the global properties");
@@ -375,6 +394,16 @@ node {
 
         if (env.TASKBOARD_END_POINT == null)
             throw new IllegalStateException("You must set TASKBOARD_END_POINT in the global properties");
+
+        if (isEmpty(ProjectOwner)) 
+            throw new IllegalArgumentException("You must provide the team leader")
+
+        if (isEmpty(GithubRepoName)) 
+            throw new IllegalArgumentException("You must provide the git repository name")
+
+        if (isEmpty(JiraKey)) 
+            throw new IllegalArgumentException("You must provide the jira key for the project")
+
     }
     stage('Checkout') {
         checkout scm
@@ -383,15 +412,21 @@ node {
     stage("Parameter existence validation") {
         if (isJobPropertiesObsolete()) {
             throw new IllegalArgumentException("Some of the build parameters are missing. It might be due to obsolete JenkinsFile. Retry your build");
-        }  
+        } 
     }
 
+    GITHUB_REPOS_API_ENDPOINT = "repos/${organization()}"
+
+    def leaderJiraName = ProjectOwner.split("/")[0]
+    def leaderMail = ProjectOwner.split("/")[1]
+
+
     stage("Github Project Creation") {
-        createGithubProject(ProjectOwner, JiraKey, GithubRepoName, ProjectDescription);
+        createGithubProject(leaderMail, JiraKey, GithubRepoName, ProjectDescription);
     }
 
     stage("Jira Project Creation") {
-        createJiraProject(JiraKey, JiraProjectName, ProjectDescription, ProjectOwner, 
+        createJiraProject(JiraKey, JiraProjectName, ProjectDescription, leaderJiraName, 
             JiraAdministrators.split(","), 
             JiraDevelopers.split(","), 
             JiraCustomers.split(","));
@@ -406,7 +441,7 @@ node {
     }
 
     stage("Taskboard project setup") {
-        updateTaskboardConfiguration(JiraKey, ProjectOwner);
+        updateTaskboardConfiguration(JiraKey, leaderJiraName);
     }
 
     stage("Setting up project permission scheme on Jenkins") {
