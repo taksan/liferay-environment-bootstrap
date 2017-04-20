@@ -76,7 +76,7 @@ def createGithubProject(leaderMail, jiraProjectName, repoName, description)
 {
     if (!checkRepoExists(repoName)) {
         println "Github repo ${repoName} doesn't exist, can't setup repository"
-        throw new IllegalStateException("Github repo ${repoName} doesn't exist, can't setup repository");
+        error("Github repo ${repoName} doesn't exist, can't setup repository");
     }
 
     if (checkFileExists("gradlew", repoName)) {
@@ -156,7 +156,7 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
         println resp.content
         println "Could not create jira project: Here's the sent data:"
         println json
-        throw new IllegalStateException("Jira project creation failed.");
+        error("Jira project creation failed.");
     }
 }
 
@@ -195,7 +195,7 @@ def checkRepoExists(repoName) {
     if (response.status == 404) 
         return false;
     if (response.status > 400)
-        throw new IllegalStateException(response.content)
+        error(response.content)
     return true;
 }
 
@@ -204,7 +204,7 @@ def checkFileExists(fileName, repoName) {
     if (response.status == 404)
         return false;
     if (response.status > 400)
-        throw new IllegalStateException(response.content)
+        error(response.content)
     return true;
 }
 
@@ -216,7 +216,7 @@ def addFileInRepo(file, repoName) {
             name: "jenkins"
         ]
     if (response.status > 400)
-        throw new IllegalStateException(response.content)
+        error(response.content)
 }
 
 def githubGetRequest(serviceEndpoint) {
@@ -384,25 +384,25 @@ node {
 
     stage('Pre validation') {
         if (env.DASHING_END_POINT == null) 
-            throw new IllegalStateException("You must set DASHING_END_POINT in the global properties");
+            error("You must set DASHING_END_POINT in the global properties");
 
         if (env.JIRA_REST_ENDPOINT == null) 
-            throw new IllegalStateException("You must set JIRA_REST_ENDPOINT in the global properties");
+            error("You must set JIRA_REST_ENDPOINT in the global properties");
 
         if (env.ORGANIZATION == null) 
-            throw new IllegalStateException("You must set ORGANIZATION in the global properties");
+            error("You must set ORGANIZATION in the global properties");
 
         if (env.TASKBOARD_END_POINT == null)
-            throw new IllegalStateException("You must set TASKBOARD_END_POINT in the global properties");
+            error("You must set TASKBOARD_END_POINT in the global properties");
 
         if (isEmpty(ProjectOwner)) 
-            throw new IllegalArgumentException("You must provide the project owner ${ProjectOwner}")
+            error("You must provide the project owner ${ProjectOwner}")
 
         if (isEmpty(GithubRepoName)) 
-            throw new IllegalArgumentException("You must provide the git repository name")
+            error("You must provide the git repository name")
 
         if (isEmpty(JiraKey)) 
-            throw new IllegalArgumentException("You must provide the jira key for the project")
+            error("You must provide the jira key for the project")
 
     }
     stage('Checkout') {
@@ -411,7 +411,7 @@ node {
 
     stage("Parameter existence validation") {
         if (isJobPropertiesObsolete()) {
-            throw new IllegalArgumentException("Some of the build parameters are missing. It might be due to obsolete JenkinsFile. Retry your build");
+            error("Some of the build parameters are missing. It might be due to obsolete JenkinsFile. Retry your build");
         } 
     }
 
