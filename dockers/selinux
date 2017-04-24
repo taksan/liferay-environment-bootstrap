@@ -1,0 +1,3 @@
+Apache proxy doesn't work out of the box. We need to do the following
+
+/usr/sbin/setsebool -P httpd_can_network_connect 1

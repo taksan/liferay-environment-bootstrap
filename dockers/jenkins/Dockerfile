@@ -13,9 +13,10 @@ VOLUME $JENKINS_HOME
 
 RUN mkdir -p /opt/jenkins
 
-RUN echo -n
+# install blade
+RUN curl https://raw.githubusercontent.com/liferay/liferay-blade-cli/master/installers/global | sh
 
-COPY run.sh setup.sh install-control.sh *.tpl scriptApproval.xml *.txt *.xml /opt/jenkins/
+COPY resources/* /opt/jenkins/
 
 COPY 001-jenkins-guide.conf /etc/apache2/sites-enabled/
 
@@ -24,3 +25,5 @@ COPY down.html /var/www/html/
 WORKDIR /opt/jenkins
 
 ENTRYPOINT ["./run.sh"]
+
+

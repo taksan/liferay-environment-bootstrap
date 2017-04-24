@@ -16,7 +16,7 @@ function main()
     service apache2 start >/dev/null 2>&1
 
     #workflow-step-api.hpi structs.hpi
-    REQUIRED_PLUGINS="http_request/1.8.13 role-strategy/2.4.0 nexus-artifact-uploader/2.9 cvs/2.13 script-realm/1.5"
+    REQUIRED_PLUGINS="http_request/1.8.13 role-strategy/2.4.0 nexus-artifact-uploader/2.9 cvs/2.13 script-realm/1.5 pipeline-utility-steps.hpi/1.3.0"
     for P in $REQUIRED_PLUGINS; do
         echo "Installing required plugin : $P"
         artifact=$(echo $P|cut -d/ -f1)

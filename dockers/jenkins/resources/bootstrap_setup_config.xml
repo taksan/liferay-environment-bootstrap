@@ -80,6 +80,10 @@ import jenkins.model.*;
 import net.sf.json.JSONObject;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import static hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
+import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
+import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
+import org.jenkinsci.plugins.github_branch_source.GitHubSCMSource;
+import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
 
 @NonCPS
 def addCredential(id, description, username, password) {
@@ -96,30 +100,11 @@ def addCredential(id, description, username, password) {
     SystemCredentialsProvider.getInstance().getStore().addCredentials(d, c)
 }
 
-@NonCPS
-def addAuth(keyName, username, password)
-{
-    def httpBasicAuth = HttpRequestGlobalConfig.get().basicDigestAuthentications;
-    def found = false;
-    httpBasicAuth.each { 
-        found = found || it.keyName == keyName;
-    }
-    if (found) {
-        println "Skipping ${keyName}, already registered"
-        return;
-    }
-    httpBasicAuth.add(new BasicDigestAuthentication(keyName, username, password))
-}
-
 node {
-   stage("Http Credentials") {
-        addAuth("githubCredentials", GITHUB_USERNAME, GITHUB_PASSWORD)
-        addAuth("jiraCredentials", JIRA_USERNAME, JIRA_USERNAME)
-        addAuth("taskboardCredentials", TASKBOARD_USERNAME, TASKBOARD_PASSWORD)
-    }
-
     stage("Other credentials") {
         addCredential("githubCredentials", "Credentials to checkout projects", GITHUB_USERNAME, GITHUB_PASSWORD)        
+        addCredential("jiraCredentials", "Credentials to access jira", JIRA_USERNAME, JIRA_USERNAME)        
+        addCredential("taskboardCredentials", "Credentials to acess the taskboard", TASKBOARD_USERNAME, TASKBOARD_PASSWORD)
     }
     
     stage("Creating jobs") {
@@ -127,6 +112,12 @@ node {
         def xmlStream = new ByteArrayInputStream(new File("/opt/jenkins/job_liferay-bootstrap-config.xml").text.getBytes());
         Jenkins.instance.createProjectFromXML("LiferayBootstrap", xmlStream);
         xmlStream = null; 
+    }
+
+    stage("Setup global library") {
+		retriever = new SCMSourceRetriever(new GitHubSCMSource(null, null, "SAME", null, "objective-solutions", "liferay-sdlc-jenkins-lib"))
+		libraryConfig = new LibraryConfiguration("liferay-sdlc-jenkins-lib", retriever)
+		GlobalLibraries.get().libraries.add(libraryConfig)    
     }
 
     stage("Globals") {
