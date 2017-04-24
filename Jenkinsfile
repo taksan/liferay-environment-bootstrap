@@ -23,10 +23,10 @@ properties([disableConcurrentBuilds(),
             choiceParameter("ProjectOwner", "Project's owner user"),
             autocompleteParameter("JiraAdministrators", "Project's administrators"),
             autocompleteParameter("JiraDevelopers", "Project's developers"),
-            autocompleteParameter("JiraCustomers", "Project's customer users"),
-            stringParameter("GithubOrganization", "(only for non default repo) Github organization"),
-            stringParameter("GithubUsername", "(only for non default repo) github user"),
-            passwordParameter("GithubPassword", "(only for non default repo) github password")
+            autocompleteParameter("JiraCustomers", "Project's customer users")
+//            stringParameter("GithubOrganization", "(only for non default repo) Github organization"),
+//            stringParameter("GithubUsername", "(only for non default repo) github user"),
+//            passwordParameter("GithubPassword", "(only for non default repo) github password")
         ]
     ]
 ])
@@ -67,7 +67,7 @@ def choiceParameter(name, description) {
 def jiraDataProvider() {
     return [ 
         $class: 'RemoteDataProvider', 
-        autoCompleteUrl: "\$JIRA_REST_ENDPOINT/projectbuilder/1.0/users", 
+        autoCompleteUrl: "\$JIRA_REST_ENDPOINT/rest/projectbuilder/1.0/users", 
         credentialsId: JIRA_CREDENTIALS_ID] 
 }
 
@@ -150,7 +150,7 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
     projectHardData = null;
 
     resp = httpRequest acceptType: 'APPLICATION_JSON', authentication: JIRA_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, 
-            url: "${JIRA_REST_ENDPOINT}/projectbuilder/1.0/project", consoleLogResponseBody: VERBOSE_REQUESTS, validResponseCodes: "100:599"
+            url: "${JIRA_REST_ENDPOINT}/rest/projectbuilder/1.0/project", consoleLogResponseBody: VERBOSE_REQUESTS, validResponseCodes: "100:599"
 
     if (resp.status != 200) {
         println resp.content
@@ -345,7 +345,7 @@ def setupPermissionRoles(jiraKey)
 {
     def strategy = Jenkins.instance.authorizationStrategy;
     def projectRoleMap = strategy.roleMaps.get(PROJECT);
-    def role = projectRoleMap.getRole("@DescriptionMatchMacroRole([{]team:{SID}[}])")
+    def role = projectRoleMap.getRole("@ViewMatchSidMacroRole(Delete/Configure)")
 
     try {
         if (role == null) {
@@ -370,10 +370,10 @@ def prepareJenkinsUserList(array) {
 }
 
 def organization() {
-    if (isEmpty(GithubOrganization))
+//    if (isEmpty(GithubOrganization))
         return ORGANIZATION;
 
-    return GithubOrganization;
+//    return GithubOrganization;
 }
 
 def isEmpty(s) {
