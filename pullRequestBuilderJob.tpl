@@ -4,7 +4,6 @@
   <description>
 This job processes pull requests, submitting them to several tests and sonar scrutiny.
 
-{team:#{_JIRA_KEY_}}
   </description>
   <properties>
     <org.jenkinsci.plugins.pipeline.modeldefinition.config.FolderConfig plugin="pipeline-model-definition@1.0.1">

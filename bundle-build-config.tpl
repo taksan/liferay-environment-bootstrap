@@ -4,7 +4,6 @@
   <description>
 This jobs uploads the build to nexus.
 
-{team:#{_JIRA_KEY_}}
   </description>
   <keepDependencies>false</keepDependencies>
   <properties>
