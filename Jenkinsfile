@@ -357,7 +357,7 @@ def setupPermissionRoles(jiraKey)
 {
     def strategy = Jenkins.instance.authorizationStrategy;
     def projectRoleMap = strategy.roleMaps.get(PROJECT);
-    def role = projectRoleMap.getRole("@ViewMatchSidMacroRole(Delete/Configure)")
+    def role = projectRoleMap.getRole("@ViewMatchSidMacroRole(:admin=Delete/Configure)")
 
     try {
         if (role == null) {
