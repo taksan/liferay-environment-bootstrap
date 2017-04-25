@@ -1,4 +1,5 @@
 #!groovy
+@Library("liferay-sdlc-jenkins-lib")
 
 import groovy.transform.Field
 import groovy.json.*
@@ -7,8 +8,8 @@ import java.lang.IllegalArgumentException;
 import com.michelin.cio.hudson.plugins.rolestrategy.RoleBasedAuthorizationStrategy;
 import hudson.model.ListView;
 import static com.michelin.cio.hudson.plugins.rolestrategy.RoleBasedAuthorizationStrategy.PROJECT;
+import org.liferay.sdlc.CredentialsManager;
 
-@Field final GITHUB_CREDENTIALS_ID = "githubCredentials";
 @Field final JIRA_CREDENTIALS_ID = "jiraCredentials";
 @Field final TASKBOARD_AUTH_ID = "taskboardCredentials"
 @Field final VERBOSE_REQUESTS = false;
@@ -21,12 +22,12 @@ properties([disableConcurrentBuilds(),
             stringParameter("GithubRepoName","Github Repo Name. The repo will become github.com/<ORGANIZATION>/<given name>"),
             stringParameter("ProjectDescription","Project Description"),
             choiceParameter("ProjectOwner", "Project's owner user"),
-            autocompleteParameter("JiraAdministrators", "Project's administrators"),
-            autocompleteParameter("JiraDevelopers", "Project's developers"),
-            autocompleteParameter("JiraCustomers", "Project's customer users")
-//            stringParameter("GithubOrganization", "(only for non default repo) Github organization"),
-//            stringParameter("GithubUsername", "(only for non default repo) github user"),
-//            passwordParameter("GithubPassword", "(only for non default repo) github password")
+            autocompleteParameter("JiraAdministrators", "Project administrators"),
+            autocompleteParameter("JiraDevelopers", "Project developers"),
+            autocompleteParameter("JiraCustomers", "Project customers"),
+            stringParameter("GithubOrganization", "(only for non default repo) Github organization"),
+            stringParameter("GithubUsername", "(only for non default repo) github user"),
+            passwordParameter("GithubPassword", "(only for non default repo) github password")
         ]
     ]
 ])
@@ -108,7 +109,7 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
         workflowScheme          : "17180",
         issueTypeScreenScheme   : "14450",
         fieldConfigurationScheme: "13600",
-        permissionScheme        : "11770",
+        permissionScheme        : "14070",
         notificationScheme      : "13250",
         customFields            : [ 
             [ id: "17737", schemeId: "19002" ], 
@@ -184,7 +185,7 @@ def createJenkinsFile(projDir, repoName, jiraProjectName, leaderMail) {
         _GITHUB_REPOSITORY_NAME_ : repoName,
         _GITHUB_ORGANIZATION_    : organization(),
         _LEADER_MAIL_            : leaderMail,
-        _GITHUB_CREDENTIALS_ID_  : GITHUB_CREDENTIALS_ID
+        _GITHUB_CREDENTIALS_ID_  : githubCredentialsId()
     ])
 
     return jenkinsFile;
@@ -233,7 +234,7 @@ def githubPutRequest(serviceEndpoint, data) {
 
 
 def githubRequest(serviceEndpoint, mode, json) {
-    resp = httpRequest acceptType: 'APPLICATION_JSON', authentication: GITHUB_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: mode, requestBody: json, url: "https://api.github.com/$serviceEndpoint",
+    resp = httpRequest acceptType: 'APPLICATION_JSON', authentication: githubCredentialsId(), contentType: 'APPLICATION_JSON', httpMode: mode, requestBody: json, url: "https://api.github.com/$serviceEndpoint",
                     consoleLogResponseBody: VERBOSE_REQUESTS, validResponseCodes: "100:599"
     return resp;                    
 }
@@ -274,7 +275,7 @@ def createJobFromTemplate(jobName, templateFile, varMap) {
 def createProjectJobs(githubRepoName) {
     createJobFromTemplate(githubRepoName+"-pr-builder", "pullRequestBuilderJob.tpl", [
         _SCM_SOURCE_ID_          : java.util.UUID.randomUUID().toString(),
-        _GITHUB_CREDENTIALS_ID_  : GITHUB_CREDENTIALS_ID,
+        _GITHUB_CREDENTIALS_ID_  : githubCredentialsId(),
         _GITHUB_REPOSITORY_NAME_ : githubRepoName,
         _GITHUB_ORGANIZATION_    : organization(),
         _JIRA_KEY_               : JiraKey
@@ -282,11 +283,21 @@ def createProjectJobs(githubRepoName) {
 
     createJobFromTemplate(githubRepoName+"-bundle-build", "bundle-build-config.tpl", [
         _SCM_SOURCE_ID_          : java.util.UUID.randomUUID().toString(),
-        _GITHUB_CREDENTIALS_ID_  : GITHUB_CREDENTIALS_ID,
+        _GITHUB_CREDENTIALS_ID_  : githubCredentialsId(),
         _GITHUB_REPOSITORY_NAME_ : githubRepoName,
         _GITHUB_ORGANIZATION_    : organization(),
         _JIRA_KEY_               : JiraKey
     ])
+
+    createJobFromTemplate(githubRepoName+"-bundle-deploy", "bundle-deploy-config.tpl", [
+        _SCM_SOURCE_ID_          : java.util.UUID.randomUUID().toString(),
+        _GITHUB_CREDENTIALS_ID_  : githubCredentialsId(),
+        _GITHUB_REPOSITORY_NAME_ : githubRepoName,
+        _GITHUB_ORGANIZATION_    : organization(),
+        _JIRA_KEY_               : JiraKey
+    ])
+
+
 
     def view = Jenkins.instance.getView(JiraKey);
     if (view != null) {
@@ -298,6 +309,7 @@ def createProjectJobs(githubRepoName) {
     }
     view.add(Jenkins.instance.getItem(githubRepoName+"-pr-builder"))
     view.add(Jenkins.instance.getItem(githubRepoName+"-bundle-build"))
+    view.add(Jenkins.instance.getItem(githubRepoName+"-bundle-deploy"))
 }
 
 def execCmd(args){
@@ -305,7 +317,7 @@ def execCmd(args){
 }
 
 def clone(repo, dir) {
-    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: GITHUB_CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]) {
+    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: githubCredentialsId(), usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]) {
         execCmd("git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${repo}.git ${dir.name}")
     }
 }
@@ -370,10 +382,17 @@ def prepareJenkinsUserList(array) {
 }
 
 def organization() {
-//    if (isEmpty(GithubOrganization))
+    if (isEmpty(GithubOrganization))
         return ORGANIZATION;
 
-//    return GithubOrganization;
+    return GithubOrganization;
+}
+
+def githubCredentialsId() {
+    if (!isEmpty(GithubOrganization)) {
+        return "github_${GithubOrganization}_${GithubRepoName}";
+    }
+    return "githubCredentials";
 }
 
 def isEmpty(s) {
@@ -381,7 +400,6 @@ def isEmpty(s) {
 }
 
 node {
-
     stage('Pre validation') {
         if (env.DASHING_END_POINT == null) 
             error("You must set DASHING_END_POINT in the global properties");
@@ -421,7 +439,16 @@ node {
     def leaderMail = ProjectOwner.split("/")[1]
 
 
-    stage("Github Project Creation") {
+    stage("Github Project Setup") {
+        if (!isEmpty(GithubOrganization)) {
+            if (isEmpty(GithubUsername)) 
+                error("If you provide a custom organization, you must provide the username")
+            if (isEmpty(GithubPassword)) 
+                error("If you provide a custom organization, you must provide the password")
+           cm = new CredentialsManager();
+           cm.createSshPrivateKeyIfNeeded(githubCredentialsId(), "Setting up credentials for github project", "Credentials for ${GithubOrganization}/${GithubRepoName}")
+        }
+
         createGithubProject(leaderMail, JiraKey, GithubRepoName, ProjectDescription);
     }
 

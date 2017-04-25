@@ -40,7 +40,7 @@ This job processes pull requests, submitting them to several tests and sonar scr
         <source class="org.jenkinsci.plugins.github_branch_source.GitHubSCMSource" plugin="github-branch-source@2.0.3">
           <id>#{_SCM_SOURCE_ID_}</id>
           <checkoutCredentialsId>SAME</checkoutCredentialsId>
-          <scanCredentialsId>githubCredentials</scanCredentialsId>
+          <scanCredentialsId>#{_GITHUB_CREDENTIALS_ID_}</scanCredentialsId>
           <repoOwner>#{_GITHUB_ORGANIZATION_}</repoOwner>
           <repository>#{_GITHUB_REPOSITORY_NAME_}</repository>
           <includes>*</includes>

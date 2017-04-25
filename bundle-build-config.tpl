@@ -37,9 +37,10 @@ def gradlew(args)
     if (isUnix()) sh "./gradlew " + args else bat "call gradlew " + args
 }
 
-node {
+node ("#{_GITHUB_ORGANIZATION_}") {
   def githubOrganization = "#{_GITHUB_ORGANIZATION_}";
   def githubProjectName = "#{_GITHUB_REPOSITORY_NAME_}";
+  def githubCredentialsId = "#{_GITHUB_CREDENTIALS_ID_}"
   
   stage("Cleanup") {
     step([$class: 'WsCleanup'])
@@ -56,7 +57,7 @@ node {
             ],
             submoduleCfg: [], 
             userRemoteConfigs: [
-                [credentialsId: '#{_GITHUB_CREDENTIALS_ID_}', 
+                [credentialsId: githubCredentialsId,
                 url: "https://github.com/${githubOrganization}/${githubProjectName}.git"]]])
   }   
   stage('Package') {
