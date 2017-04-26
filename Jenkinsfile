@@ -172,7 +172,8 @@ def addJenkinsfileForExistingProjects(repoName, jiraProjectName, leaderMail)
 
     def jenkinsFile = createJenkinsFile("proj", repoName, jiraProjectName, leaderMail);
 
-    addFileInRepo(jenkinsFile, repoName) 
+    def content = readFile file: jenkinsFile
+    addFileInRepo("Jenkinsfile", content, repoName) 
 }
 
 def createJenkinsFile(projDir, repoName, jiraProjectName, leaderMail) {
@@ -206,8 +207,7 @@ def checkFileExists(fileName, repoName) {
     return true;
 }
 
-def addFileInRepo(filename, repoName) {
-    def content = readFile file: filename
+def addFileInRepo(filename, content, repoName) {
     response = githubPutRequest "${GITHUB_REPOS_API_ENDPOINT}/${repoName}/contents/${filename}",
         [
             message: "Jenkinsfile automatically added",
