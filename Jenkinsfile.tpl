@@ -18,9 +18,8 @@ node ("#{_GITHUB_REPOSITORY_NAME_}") {
 		}
 
 		stage('Setup') {
-			def bundlesDir = new File("bundles");
-			if (bundlesDir.exists()) 
-				bundlesDir.deleteDir();
+			if (fileExists("bundles"))
+				deleteRecursive: "bundles"
 
 			appendAdditionalCommand("build.gradle", [
 				"_SONAR_PROJECT_NAME_" : projectName,
