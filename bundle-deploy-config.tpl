@@ -28,6 +28,7 @@
 import org.liferay.sdlc.FileOperations;
 import org.liferay.sdlc.CredentialsManager;
 import static org.liferay.sdlc.SDLCPrUtilities.*
+import static org.liferay.sdlc.BuildUtils.*;
 
 node ("#{_GITHUB_REPOSITORY_NAME_}") {
     def githubOrganization = "#{_GITHUB_ORGANIZATION_}";
@@ -71,7 +72,7 @@ node ("#{_GITHUB_REPOSITORY_NAME_}") {
     
             if(TargetBuild == "") 
                 // Get the last successful build number for download that build's bundle zip
-                bundle_build_number = Jenkins.instance.getItem("${githubProjectName}-bundle-build").lastSuccessfulBuild.number
+                bundle_build_number = lastBuildNumber("${githubProjectName}-bundle-build");
             else 
                 bundle_build_number = TargetBuild
     

@@ -5,10 +5,9 @@ import groovy.transform.Field
 import groovy.json.*
 import java.util.Base64;
 import java.lang.IllegalArgumentException;
-import com.michelin.cio.hudson.plugins.rolestrategy.RoleBasedAuthorizationStrategy;
-import hudson.model.ListView;
-import static com.michelin.cio.hudson.plugins.rolestrategy.RoleBasedAuthorizationStrategy.PROJECT;
 import org.liferay.sdlc.CredentialsManager;
+import static org.liferay.sdlc.JenkinsUtils.*;
+
 
 @Field final JIRA_CREDENTIALS_ID = "jiraCredentials";
 @Field final TASKBOARD_AUTH_ID = "taskboardCredentials"
@@ -90,16 +89,15 @@ def createGithubProject(leaderMail, jiraProjectName, repoName, description)
 
     def fullRepoName = "${organization()}/$repoName"
 
-    File projDir = new File(workspace, "proj");
-    execCmd("rm -rf proj")
+    deleteRecursive "proj";
 
-    clone (fullRepoName, projDir);
+    clone (fullRepoName, "proj");
 
     execCmd("cd proj && blade init -f");
 
-    createJenkinsFile(projDir, repoName, jiraProjectName, leaderMail);
+    createJenkinsFile("proj", repoName, jiraProjectName, leaderMail);
 
-    push(projDir);
+    push("proj");
 }
 
 def createJiraProject(jiraKey, jiraName, description, lead, administrators, developers, customers)
@@ -170,17 +168,16 @@ def addJenkinsfileForExistingProjects(repoName, jiraProjectName, leaderMail)
     println "Jenkinsfile missing in project. Adding.."
 
     // file is missing, we need to up it there
-    File projDir = new File(workspace, "proj");
-    projDir.mkdirs();
+    mkdir "proj"
 
-    jenkinsFile = createJenkinsFile(projDir, repoName, jiraProjectName, leaderMail);
+    def jenkinsFile = createJenkinsFile("proj", repoName, jiraProjectName, leaderMail);
 
     addFileInRepo(jenkinsFile, repoName) 
 }
 
 def createJenkinsFile(projDir, repoName, jiraProjectName, leaderMail) {
-    File jenkinsFile = new File(projDir, "Jenkinsfile");
-    jenkinsFile.write updateTemplateVariables("Jenkinsfile.tpl", [
+    def fileName = "${projDir}/Jenkinsfile";
+    writeFile file: fileName, text: updateTemplateVariables("Jenkinsfile.tpl", [
         _JIRA_PROJECT_NAME_      : jiraProjectName,
         _GITHUB_REPOSITORY_NAME_ : repoName,
         _GITHUB_ORGANIZATION_    : organization(),
@@ -188,7 +185,7 @@ def createJenkinsFile(projDir, repoName, jiraProjectName, leaderMail) {
         _GITHUB_CREDENTIALS_ID_  : githubCredentialsId()
     ])
 
-    return jenkinsFile;
+    return fileName;
 }
 
 def checkRepoExists(repoName) {
@@ -209,11 +206,12 @@ def checkFileExists(fileName, repoName) {
     return true;
 }
 
-def addFileInRepo(file, repoName) {
-    response = githubPutRequest "${GITHUB_REPOS_API_ENDPOINT}/${repoName}/contents/${file.name}",
+def addFileInRepo(filename, repoName) {
+    def content = readFile file: filename
+    response = githubPutRequest "${GITHUB_REPOS_API_ENDPOINT}/${repoName}/contents/${filename}",
         [
             message: "Jenkinsfile automatically added",
-            content:  Base64.getEncoder().encodeToString(file.text.bytes),
+            content:  Base64.getEncoder().encodeToString(content.bytes),
             name: "jenkins"
         ]
     if (response.status > 400)
@@ -256,7 +254,7 @@ def updateTaskboardConfiguration(jiraKey, leaderJiraName)
 
 def updateTemplateVariables(templateName, varMap)
 {
-    def txt = new File(workspace, templateName).text;
+    def txt = readFile file: templateName;
     for (e in varMap) {
         txt = txt.replace("#{"+e.key+"}", e.value);
     }
@@ -266,7 +264,7 @@ def updateTemplateVariables(templateName, varMap)
 def createJobFromTemplate(jobName, templateFile, varMap) {
     def jobXml = updateTemplateVariables(templateFile, varMap )
     try {
-        Jenkins.instance.createProjectFromXML(jobName, new ByteArrayInputStream(jobXml.getBytes()))
+        createProjectFromXML(jobName, jobXml)
     } catch(IllegalArgumentException e) {
         println "Job ${jobName} not created (reason: ${e.message}), probably already exists. Just ignore."
     }
@@ -299,31 +297,28 @@ def createProjectJobs(githubRepoName) {
 
 
 
-    def view = Jenkins.instance.getView(JiraKey);
-    if (view != null) {
+    if (checkViewExists(JiraKey)) 
         println "View ${JiraKey} already exists. Skip"
-    }
-    else {
-        view = new ListView(JiraKey, Jenkins.instance);
-        Jenkins.instance.addView(view)
-    }
-    view.add(Jenkins.instance.getItem(githubRepoName+"-pr-builder"))
-    view.add(Jenkins.instance.getItem(githubRepoName+"-bundle-build"))
-    view.add(Jenkins.instance.getItem(githubRepoName+"-bundle-deploy"))
+    else 
+        createView(JiraKey);
+    
+    addJobToView(githubRepoName+"-pr-builder", JiraKey)
+    addJobToView(githubRepoName+"-bundle-build", JiraKey)
+    addJobToView(githubRepoName+"-bundle-deploy", JiraKey)
 }
 
 def execCmd(args){
     sh args
 }
 
-def clone(repo, dir) {
+def clone(repo, dirName) {
     withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: githubCredentialsId(), usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]) {
-        execCmd("git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${repo}.git ${dir.name}")
+        execCmd("git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${repo}.git ${dirName}")
     }
 }
 
 def push(dir) {
-    execCmd("cd ${dir.name} && git add * && git -c 'user.name=autocreator' -c 'user.email=autocreator@nomail' commit -m 'Project setup' && git push origin master")
+    execCmd("cd ${dir} && git add * && git -c 'user.name=autocreator' -c 'user.email=autocreator@nomail' commit -m 'Project setup' && git push origin master")
 }
 
 def asJson(data) {
@@ -331,12 +326,7 @@ def asJson(data) {
 }
 
 def isJobPropertiesObsolete() {
-    def shouldHave = []
-    for (e in Jenkins.instance.getItem(JOB_NAME).properties) {
-        if (e.key instanceof hudson.model.ParametersDefinitionProperty.DescriptorImpl) {
-            shouldHave = e.value.parameterDefinitionNames
-        }   
-    }
+    def shouldHave = getJobParameterNames(JOB_NAME);
     
     boolean isObsolete = false;
     def envvars = env.getEnvironment()
@@ -355,22 +345,7 @@ def isJobPropertiesObsolete() {
 @NonCPS
 def setupPermissionRoles(jiraKey)
 {
-    def strategy = Jenkins.instance.authorizationStrategy;
-    def projectRoleMap = strategy.roleMaps.get(PROJECT);
-    def role = projectRoleMap.getRole("@ViewMatchSidMacroRole(:admin=Delete/Configure)")
-
-    try {
-        if (role == null) {
-            println "It's not possible to team role because the required role doesn't exist"
-            return;
-        }
-        println "Assign $jiraKey to role $role"
-        projectRoleMap.assignRole(role,jiraKey);
-    }finally {
-        strategy = null;
-        projectRoleMap = null;
-        role = null;
-    }
+    assignSidToRole(jiraKey, "@ViewMatchSidMacroRole(:admin=Delete/Configure)");
 }
 
 @NonCPS
@@ -446,7 +421,7 @@ node {
             if (isEmpty(GithubPassword)) 
                 error("If you provide a custom organization, you must provide the password")
            cm = new CredentialsManager();
-           cm.createSshPrivateKeyIfNeeded(githubCredentialsId(), "Setting up credentials for github project", "Credentials for ${GithubOrganization}/${GithubRepoName}")
+           cm.createUsernameWithPasswordCredentialsIfNeeded(githubCredentialsId(), "Setting up credentials for github project", "Credentials for ${GithubOrganization}/${GithubRepoName}")
         }
 
         createGithubProject(leaderMail, JiraKey, GithubRepoName, ProjectDescription);
