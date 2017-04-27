@@ -242,7 +242,7 @@ def createDashingConfiguration(jiraKey)
 {
     def json = asJson([project: jiraKey])
     
-    httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${DASHING_END_POINT}/project",
+    httpRequest acceptType: 'APPLICATION_JSON', authentication: 'dashboardCredentials', contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${DASHING_END_POINT}/project",
                 consoleLogResponseBody: VERBOSE_REQUESTS 
 }
 
