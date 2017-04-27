@@ -2,9 +2,9 @@
 <flow-definition plugin="workflow-job@2.10">
   <actions/>
   <description>
-This jobs uploads the build to nexus.
-
+This job uploads the build to nexus.
   </description>
+  <displayName>#{_JIRA_PROJECT_NAME_} Bundle Build</displayName>
   <keepDependencies>false</keepDependencies>
   <properties>
     <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.26.0">
@@ -63,12 +63,9 @@ node ("#{_GITHUB_ORGANIZATION_}") {
         // Build Liferay bundle with custom code and common configurations
         version_name="fix-pack-$fix_pack_version"
 
-        if (patch_number != "NONE")
-            version_name="fix-pack-${fix_pack_version}-patch-${patch_number}"
-            
         timestamps {
             gradlew "-Pliferay.workspace.bundle.url=${NexusHostUrl}/repository/patched-bundle/patched-bundle-${version_name}.zip -Pliferay.workspace.environment=vanilla distBundleZip --no-daemon"
-            new File("${workspace}/build",JOB_NAME+".zip").renameTo("${workspace}/build/${githubProjectName}-${build_number}.zip");
+            renameTo: "build/${JOB_NAME}.zip", "build/${githubProjectName}-${build_number}.zip"
         }
   }   
   stage('Nexus Upload') {

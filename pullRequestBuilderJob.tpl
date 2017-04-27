@@ -3,8 +3,8 @@
   <actions/>
   <description>
 This job processes pull requests, submitting them to several tests and sonar scrutiny.
-
   </description>
+  <displayName>#{_JIRA_PROJECT_NAME_} PR Builder</displayName>
   <properties>
     <org.jenkinsci.plugins.pipeline.modeldefinition.config.FolderConfig plugin="pipeline-model-definition@1.0.1">
       <dockerLabel/>

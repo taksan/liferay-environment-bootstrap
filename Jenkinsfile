@@ -271,31 +271,11 @@ def createJobFromTemplate(jobName, templateFile, varMap) {
 }
 
 def createProjectJobs(githubRepoName) {
-    createJobFromTemplate(githubRepoName+"-pr-builder", "pullRequestBuilderJob.tpl", [
-        _SCM_SOURCE_ID_          : java.util.UUID.randomUUID().toString(),
-        _GITHUB_CREDENTIALS_ID_  : githubCredentialsId(),
-        _GITHUB_REPOSITORY_NAME_ : githubRepoName,
-        _GITHUB_ORGANIZATION_    : organization(),
-        _JIRA_KEY_               : JiraKey
-    ])
+    createJobFromTemplate(githubRepoName+"-pr-builder", "pullRequestBuilderJob.tpl", getJobTemplateData())
 
-    createJobFromTemplate(githubRepoName+"-bundle-build", "bundle-build-config.tpl", [
-        _SCM_SOURCE_ID_          : java.util.UUID.randomUUID().toString(),
-        _GITHUB_CREDENTIALS_ID_  : githubCredentialsId(),
-        _GITHUB_REPOSITORY_NAME_ : githubRepoName,
-        _GITHUB_ORGANIZATION_    : organization(),
-        _JIRA_KEY_               : JiraKey
-    ])
+    createJobFromTemplate(githubRepoName+"-bundle-build", "bundle-build-config.tpl", getJobTemplateData())
 
-    createJobFromTemplate(githubRepoName+"-bundle-deploy", "bundle-deploy-config.tpl", [
-        _SCM_SOURCE_ID_          : java.util.UUID.randomUUID().toString(),
-        _GITHUB_CREDENTIALS_ID_  : githubCredentialsId(),
-        _GITHUB_REPOSITORY_NAME_ : githubRepoName,
-        _GITHUB_ORGANIZATION_    : organization(),
-        _JIRA_KEY_               : JiraKey
-    ])
-
-
+    createJobFromTemplate(githubRepoName+"-bundle-deploy", "bundle-deploy-config.tpl", getJobTemplateData())
 
     if (checkViewExists(JiraKey)) 
         println "View ${JiraKey} already exists. Skip"
@@ -305,6 +285,18 @@ def createProjectJobs(githubRepoName) {
     addJobToView(githubRepoName+"-pr-builder", JiraKey)
     addJobToView(githubRepoName+"-bundle-build", JiraKey)
     addJobToView(githubRepoName+"-bundle-deploy", JiraKey)
+}
+
+def getJobTemplateData() {
+    return [
+        _SCM_SOURCE_ID_          : java.util.UUID.randomUUID().toString(),
+        _GITHUB_CREDENTIALS_ID_  : githubCredentialsId(),
+        _GITHUB_REPOSITORY_NAME_ : githubRepoName,
+        _GITHUB_ORGANIZATION_    : organization(),
+        _JIRA_KEY_               : JiraKey,
+        _JIRA_PROJECT_NAME_      : JiraProjectName
+
+    ]
 }
 
 def execCmd(args){

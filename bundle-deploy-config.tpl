@@ -1,7 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <flow-definition plugin="workflow-job@2.10">
   <actions/>
-  <description></description>
+  <description>This job deploys the build in a server</description>
+  <displayName>#{_JIRA_PROJECT_NAME_} Bundle Deploy</displayName>
   <keepDependencies>false</keepDependencies>
   <properties>
     <hudson.model.ParametersDefinitionProperty>
