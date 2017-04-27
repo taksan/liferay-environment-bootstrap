@@ -7,6 +7,14 @@ This job uploads the build to nexus.
   <displayName>#{_JIRA_PROJECT_NAME_} Bundle Build</displayName>
   <keepDependencies>false</keepDependencies>
   <properties>
+      <hudson.model.ParametersDefinitionProperty><parameterDefinitions>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>versionName</name>
+          <description>Select the desired fix pack version/patch version.</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array"><string>fix-pack-13</string></a>
+          </choices></hudson.model.ChoiceParameterDefinition>
+      </parameterDefinitions></hudson.model.ParametersDefinitionProperty>
     <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.26.0">
       <projectUrl>https://github.com/#{_GITHUB_ORGANIZATION_}/#{_GITHUB_REPOSITORY_NAME_}/</projectUrl>
       <displayName/>
@@ -24,18 +32,15 @@ This job uploads the build to nexus.
   </properties>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.27">
     <script>#!gradle
+@Library("liferay-sdlc-jenkins-lib") _
+
 properties([
   parameters([
-    choice(choices: "10", description: 'Select the desired fix pack version number.', name: 'fix_pack_version'), 
-    choice(choices: "NONE\n213\n150", description: 
-    '''Select whether or not a support patch should be applied.''', name: 'patch_number')]), 
+    choice(description: 'Select the desired fix  pach/patch version.', name: 'versionName',
+    choices: '''fix-pack-13'''
+    )]), 
   pipelineTriggers([])])
   
-def gradlew(args)
-{
-    if (isUnix()) sh "./gradlew " + args else bat "call gradlew " + args
-}
-
 node ("#{_GITHUB_REPOSITORY_NAME_}") {
   def githubOrganization = "#{_GITHUB_ORGANIZATION_}";
   def githubProjectName = "#{_GITHUB_REPOSITORY_NAME_}";
@@ -56,25 +61,25 @@ node ("#{_GITHUB_REPOSITORY_NAME_}") {
             ],
             submoduleCfg: [], 
             userRemoteConfigs: [
-                [credentialsId: githubCredentialsId,
+                [credentialsId: githubCredentialsId, 
                 url: "https://github.com/${githubOrganization}/${githubProjectName}.git"]]])
   }   
   stage('Package') {
-        // Build Liferay bundle with custom code and common configurations
-        version_name="fix-pack-$fix_pack_version"
-
+        if (versionName == null)
+            error("Provide the versionName");
+            
         timestamps {
-            gradlew "-Pliferay.workspace.bundle.url=${NexusHostUrl}/repository/patched-bundle/patched-bundle-${version_name}.zip -Pliferay.workspace.environment=vanilla distBundleZip --no-daemon"
+            gradle "-Pliferay.workspace.bundle.url=${PatchNexusHostUrl}/repository/patched-bundle/patched-bundle-${versionName}.zip -Pliferay.workspace.environment=vanilla distBundleZip --no-daemon"
             renameTo "build/${JOB_NAME}.zip", "build/${githubProjectName}-${build_number}.zip"
         }
-  }   
+  }
   stage('Nexus Upload') {
        nexusProtocol = NexusHostUrl.split(":")[0];
        nexusIpPort = NexusHostUrl.replaceFirst("^.*?://","")
        nexusArtifactUploader artifacts: [[artifactId: githubProjectName, classifier: '', file: "build/${githubProjectName}-${build_number}.zip", type: 'zip']], 
-             credentialsId: 'jiraCredentials', 
+             credentialsId: 'nexusCredentials',
              groupId: '/', 
-             nexusUrl: NEXUS_HOST,
+             nexusUrl: nexusIpPort,
              nexusVersion: 'nexus3',
              protocol: 'http',
              repository: 'jenkins-build',
