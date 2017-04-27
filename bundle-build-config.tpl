@@ -36,7 +36,7 @@ def gradlew(args)
     if (isUnix()) sh "./gradlew " + args else bat "call gradlew " + args
 }
 
-node ("#{_GITHUB_ORGANIZATION_}") {
+node ("#{_GITHUB_REPOSITORY_NAME_}") {
   def githubOrganization = "#{_GITHUB_ORGANIZATION_}";
   def githubProjectName = "#{_GITHUB_REPOSITORY_NAME_}";
   def githubCredentialsId = "#{_GITHUB_CREDENTIALS_ID_}"
@@ -65,7 +65,7 @@ node ("#{_GITHUB_ORGANIZATION_}") {
 
         timestamps {
             gradlew "-Pliferay.workspace.bundle.url=${NexusHostUrl}/repository/patched-bundle/patched-bundle-${version_name}.zip -Pliferay.workspace.environment=vanilla distBundleZip --no-daemon"
-            renameTo: "build/${JOB_NAME}.zip", "build/${githubProjectName}-${build_number}.zip"
+            renameTo "build/${JOB_NAME}.zip", "build/${githubProjectName}-${build_number}.zip"
         }
   }   
   stage('Nexus Upload') {
