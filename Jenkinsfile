@@ -24,19 +24,22 @@ properties([disableConcurrentBuilds(),
             autocompleteParameter("JiraAdministrators", "Project administrators"),
             autocompleteParameter("JiraDevelopers", "Project developers"),
             autocompleteParameter("JiraCustomers", "Project customers"),
-            stringParameter("GithubOrganization", "(only for non default repo) Github organization"),
-            stringParameter("GithubUsername", "(only for non default repo) github user"),
-            passwordParameter("GithubPassword", "(only for non default repo) github password")
+            stringParameter("BuildServerIp", """IP Address of the server that will build the jobs. You must setup the server to have a 'jenkins' user that authorizes the following public key:
+
+ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAsaAmegjHI2/EbjJH8LHRwpQs1SuM6NP0kTIzRnEk/oHMG9ZUVpifg5++2hzyQ9Aub13Ggg5Mr33QM09moCZd0fo/RyXhv/i/B2pEb29KpgqJ0t/hs+y3Z2S2vxXVkd3zJ+LmEL/Lwtdmx1Y8l3wF7/MP/cPjBtWHdjT+5BGR1xbJN+Ma7IchR5TeIaCas3VVvK2UxBwzVarB9ErmA1k3pARcNO7Ho64nxkpq3X7V711InUVlPARzJVPCX9FwruDH15APilnDWOSJIjDu779XDyIYUr4DUFgzKk1nrJGPlcbOuNBpIeKLEPQGafmNnt99xX8girC+wNCNOkiGbPSm4Q== jenkins@gs-ci.liferay.com"""),
+            stringParameter("GithubOrganization", "(optinal) Custom Github organization"),
+            stringParameter("GithubUsername", "(optional) Custom Github user"),
+            passwordParameter("GithubPassword", "(optional) Custom Github password")
         ]
     ]
 ])
 
-def stringParameter(name, description) {
-    return [ name: name, description: description, $class: 'StringParameterDefinition']
+def stringParameter(name, description, defaultValue="") {
+    return [ name: name, description: description, $class: 'StringParameterDefinition', default: defaultValue]
 }
 
 def passwordParameter(name, description) {
-    return [ name: name, description: description, $class: 'PasswordParameterDefinition']
+    return [ name: name, description: description, $class: 'PasswordParameterDefinition', default: ""]
 }
 
 def autocompleteParameter(name, description) {
@@ -250,6 +253,9 @@ def updateTaskboardConfiguration(jiraKey, leaderJiraName)
 {
     httpRequest acceptType: 'APPLICATION_JSON', authentication: TASKBOARD_AUTH_ID, httpMode: 'POST', url: "${TASKBOARD_END_POINT}/api/projects?projectKey=${jiraKey}",
                 requestBody: asJson([projectKey: JiraKey, teamLeader: leaderJiraName]) ,consoleLogResponseBody: VERBOSE_REQUESTS
+
+    httpRequest authentication: TASKBOARD_AUTH_ID, url: "${TASKBOARD_END_POINT}/cache/configuration", consoleLogResponseBody: VERBOSE_REQUESTS
+
 }
 
 def updateTemplateVariables(templateName, varMap)
@@ -431,6 +437,10 @@ node {
 
     stage("Dashboard project creation") {
         createDashingConfiguration(JiraKey);
+    }
+
+    stage("Build server Slave setup") {
+        createJenkinsSlave(GithubRepoName, "$JiraProjectName's build server", BuildServerIp, 'jenkins-slaves');
     }
 
     stage("Taskboard project setup") {
