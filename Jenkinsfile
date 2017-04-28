@@ -412,8 +412,7 @@ node {
                 error("If you provide a custom organization, you must provide the username")
             if (isEmpty(GithubPassword)) 
                 error("If you provide a custom organization, you must provide the password")
-           cm = new CredentialsManager();
-           cm.createUsernameWithPasswordCredentialsIfNeeded(githubCredentialsId(), "Setting up credentials for github project", "Credentials for ${GithubOrganization}/${GithubRepoName}")
+           new CredentialsManager().createUsernameWithPasswordCredentials(githubCredentialsId(), "Credentials for ${GithubOrganization}/${GithubRepoName}", GithubUsername, GithubPassword)
         }
 
         createGithubProject(leaderMail, JiraKey, GithubRepoName, ProjectDescription);
