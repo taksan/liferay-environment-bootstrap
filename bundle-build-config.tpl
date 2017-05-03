@@ -36,18 +36,17 @@ This job uploads the build to nexus.
 
 properties([
   parameters([
-	[$class: 'DropdownAutocompleteParameterDefinition', name: 'PatchVersion', description: 'Select the desired fix  pach/patch version.',
+	[$class: 'DropdownAutocompleteParameterDefinition', name: 'versionName', description: 'Select the desired fix  pach/patch version.',
 		dataProvider: [$class: 'GroovyDataProvider', sandbox: true, script: '''
-			return requestBuilder
-				.url("${NexusHostUrl}/service/siesta/rest/v1/script/findassets/run")
-				.credentials("nexusCredentials")
-				.header("Content-Type","text/plain")
-				.body(["repoName":"patched-bundle","pattern":"patched-bundle-%"])
-				.post().contentsJson.result.replace("/repository/patched-bundle/","")
+return requestBuilder
+    .url("${NexusHostUrl}/service/siesta/rest/v1/script/findassets/run")
+    .credentials("nexusCredentials")
+    .header("Content-Type","text/plain")
+    .body(["repoName":"patched-bundle","pattern":"patched-bundle-%"])
+    .post().contentsJson.result.replace("/repository/patched-bundle/patched-bundle-","").replace(".zip", "")
 		'''], 
-		defaultValue: '',  displayExpression: '', name: 'versionName', valueExpression: '']
-    ]), 
-  pipelineTriggers([])])
+		defaultValue: '',  displayExpression: '', valueExpression: '']
+    ])])
 
 
 node ("#{_GITHUB_REPOSITORY_NAME_}") {
