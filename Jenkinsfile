@@ -372,7 +372,7 @@ def isEmpty(s) {
     return s == null || "".equals(s)
 }
 
-node {
+node ("master"){
     stage('Pre validation') {
         if (env.DASHING_END_POINT == null) 
             error("You must set DASHING_END_POINT in the global properties");
