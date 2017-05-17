@@ -28,7 +28,7 @@ properties([disableConcurrentBuilds(),
             stringParameter("JiraProjectName","Project name"),
             stringParameter("GithubRepoName","Github Repo Name. The repo will become github.com/<ORGANIZATION>/<given name>"),
             stringParameter("ProjectDescription","Project Description"),
-            choiceParameter("ProjectOwner", "Project's owner user", "displayName", "{name+'/'+emailAddress}", jiraDataProvider()),
+            choiceParameter("ProjectOwner", "Project's owner user", "displayName", '{name+"/"+emailAddress}', jiraDataProvider()),
             autocompleteParameter("JiraAdministrators", "Project administrators", "displayName", "name", jiraDataProvider()),
             autocompleteParameter("JiraDevelopers", "Project developers", "displayName", "name", jiraDataProvider()),
             autocompleteParameter("JiraCustomers", "Project customers", "displayName", "name", jiraDataProvider()),
@@ -38,7 +38,7 @@ ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAsaAmegjHI2/EbjJH8LHRwpQs1SuM6NP0kTIzRnEk/oHM
             stringParameter("GithubOrganization", "(optinal) Custom Github organization"),
             stringParameter("GithubUsername", "(optional) Custom Github user"),
             passwordParameter("GithubPassword", "(optional) Custom Github password"),
-            choiceParameter("CustomTimeZone", "(optional) Custom TimeZone", "displayName", "name", timeZoneDataProvider())
+            choiceParameter("CustomTimeZone", "(optional) Custom TimeZone", "displayName", "id", new InlineJsonDataProvider(timeZoneList()))
         ]
     ]
 ])
@@ -68,7 +68,7 @@ def choiceParameter(name, description, displayExpression, valueExpression, dataP
     return [
         $class: 'DropdownAutocompleteParameterDefinition',
         name: name,
-        description: '',
+        description: description,
         defaultValue: '',
         displayExpression: displayExpression,
         valueExpression: valueExpression,
@@ -84,12 +84,20 @@ def jiraDataProvider() {
 }
 
 def timeZoneDataProvider() {
+    return [
+        $class: 'InlineJsonDataProvider',
+        sandbox: false,
+        script: timeZoneList()
+    ]
+}
+
+def timeZoneList() {
     def List<String> ids = TimeZone.getAvailableIDs();
     def List<String> results = new ArrayList<>();
     for (String id : ids) {
        results.add([ id: TimeZone.getTimeZone(id).getID(), displayName: timeZoneDisplayFormat(TimeZone.getTimeZone(id)) ]);
     }
-    return results;
+    return asJson(results);
 }
 
 def timeZoneDisplayFormat(TimeZone tz) {
@@ -495,12 +503,12 @@ node ("master"){
     }
 
     stage("Dashboard project creation") {
-        if (isEmpty(GithubUsername) || isEmpty(GithubPassword)) {
+        if ( isEmpty(GithubUsername) || isEmpty(GithubPassword) ) {
             def credentials = lookupUsernamePasswordCredentials("", githubCredentialsId());
             GithubUsername = credentials.getUsername();
             GithubPassword = credentials.getPassword().getPlainText();
         }
-        if (isEmpty(CustomTimeZone) {
+        if (isEmpty(CustomTimeZone)) {
             CustomTimeZone = jenkinsTimeZoneId();
         }
         createDashingConfiguration(JiraKey, GithubUsername, GithubPassword, GithubRepoName, CustomTimeZone);
