@@ -1,11 +1,19 @@
 #!groovy
 @Library("liferay-sdlc-jenkins-lib")
 
-import groovy.transform.Field
-import groovy.json.*
+import groovy.transform.Field;
+import groovy.json.*;
 import java.util.Base64;
+import java.util.concurrent.TimeUnit;
 import java.lang.IllegalArgumentException;
 import org.liferay.sdlc.CredentialsManager;
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import hudson.model.Item;
+import hudson.security.ACL;
+
 import static org.liferay.sdlc.JenkinsUtils.*;
 
 
@@ -20,16 +28,17 @@ properties([disableConcurrentBuilds(),
             stringParameter("JiraProjectName","Project name"),
             stringParameter("GithubRepoName","Github Repo Name. The repo will become github.com/<ORGANIZATION>/<given name>"),
             stringParameter("ProjectDescription","Project Description"),
-            choiceParameter("ProjectOwner", "Project's owner user"),
-            autocompleteParameter("JiraAdministrators", "Project administrators"),
-            autocompleteParameter("JiraDevelopers", "Project developers"),
-            autocompleteParameter("JiraCustomers", "Project customers"),
+            choiceParameter("ProjectOwner", "Project's owner user", "displayName", "{name+'/'+emailAddress}", jiraDataProvider()),
+            autocompleteParameter("JiraAdministrators", "Project administrators", "displayName", "name", jiraDataProvider()),
+            autocompleteParameter("JiraDevelopers", "Project developers", "displayName", "name", jiraDataProvider()),
+            autocompleteParameter("JiraCustomers", "Project customers", "displayName", "name", jiraDataProvider()),
             stringParameter("BuildServerIp", """IP Address of the server that will build the jobs. You must setup the server to have a 'jenkins' user that authorizes the following public key:
 
 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAsaAmegjHI2/EbjJH8LHRwpQs1SuM6NP0kTIzRnEk/oHMG9ZUVpifg5++2hzyQ9Aub13Ggg5Mr33QM09moCZd0fo/RyXhv/i/B2pEb29KpgqJ0t/hs+y3Z2S2vxXVkd3zJ+LmEL/Lwtdmx1Y8l3wF7/MP/cPjBtWHdjT+5BGR1xbJN+Ma7IchR5TeIaCas3VVvK2UxBwzVarB9ErmA1k3pARcNO7Ho64nxkpq3X7V711InUVlPARzJVPCX9FwruDH15APilnDWOSJIjDu779XDyIYUr4DUFgzKk1nrJGPlcbOuNBpIeKLEPQGafmNnt99xX8girC+wNCNOkiGbPSm4Q== jenkins@gs-ci.liferay.com"""),
             stringParameter("GithubOrganization", "(optinal) Custom Github organization"),
             stringParameter("GithubUsername", "(optional) Custom Github user"),
-            passwordParameter("GithubPassword", "(optional) Custom Github password")
+            passwordParameter("GithubPassword", "(optional) Custom Github password"),
+            choiceParameter("CustomTimeZone", "(optional) Custom TimeZone", "displayName", "name", timeZoneDataProvider())
         ]
     ]
 ])
@@ -42,28 +51,28 @@ def passwordParameter(name, description) {
     return [ name: name, description: description, $class: 'PasswordParameterDefinition', default: ""]
 }
 
-def autocompleteParameter(name, description) {
+def autocompleteParameter(name, description, displayExpression, valueExpression, dataProvider) {
     return [
         $class: 'AutoCompleteStringParameterDefinition', 
-        name: name, 
-        description: description, 
-        defaultValue: '', 
-        allowUnrecognizedTokens: false, 
-        displayExpression: 'displayName', 
-        valueExpression: 'name',
-        dataProvider: jiraDataProvider()
+        name: name,
+        description: description,
+        defaultValue: '',
+        allowUnrecognizedTokens: false,
+        displayExpression: displayExpression,
+        valueExpression: valueExpression,
+        dataProvider: dataProvider
         ];
 }
 
-def choiceParameter(name, description) {
+def choiceParameter(name, description, displayExpression, valueExpression, dataProvider) {
     return [
-        $class: 'DropdownAutocompleteParameterDefinition', 
+        $class: 'DropdownAutocompleteParameterDefinition',
         name: name,
-        description: '', 
-        defaultValue: '', 
-        displayExpression: 'displayName',
-        valueExpression: '{name+"/"+emailAddress}',
-        dataProvider: jiraDataProvider()
+        description: '',
+        defaultValue: '',
+        displayExpression: displayExpression,
+        valueExpression: valueExpression,
+        dataProvider: dataProvider
         ];
 }
 
@@ -74,6 +83,27 @@ def jiraDataProvider() {
         credentialsId: JIRA_CREDENTIALS_ID] 
 }
 
+def timeZoneDataProvider() {
+    def List<String> ids = TimeZone.getAvailableIDs();
+    def List<String> results = new ArrayList<>();
+    for (String id : ids) {
+       results.add([ id: TimeZone.getTimeZone(id).getID(), displayName: timeZoneDisplayFormat(TimeZone.getTimeZone(id)) ]);
+    }
+    return results;
+}
+
+def timeZoneDisplayFormat(TimeZone tz) {
+    def hours = TimeUnit.MILLISECONDS.toHours(tz.getRawOffset());
+    def minutes = TimeUnit.MILLISECONDS.toMinutes(tz.getRawOffset()) - TimeUnit.HOURS.toMinutes(hours);
+    minutes = Math.abs(minutes);
+    def result;
+    if (hours > 0) {
+        result = String.format("(GMT+%d:%02d) %s", hours, minutes, tz.getID());
+    } else {
+        result = String.format("(GMT%d:%02d) %s", hours, minutes, tz.getID());
+    }
+    return result;
+}
 
 def createGithubProject(leaderMail, jiraProjectName, repoName, description)
 {
@@ -233,17 +263,25 @@ def githubPutRequest(serviceEndpoint, data) {
     return githubRequest(serviceEndpoint, "PUT", asJson(data))
 }
 
+def serviceUrl(serviceEndpoint) {
+    return "https://api.github.com/$serviceEndpoint";
+}
 
 def githubRequest(serviceEndpoint, mode, json) {
-    resp = httpRequest acceptType: 'APPLICATION_JSON', authentication: githubCredentialsId(), contentType: 'APPLICATION_JSON', httpMode: mode, requestBody: json, url: "https://api.github.com/$serviceEndpoint",
+    resp = httpRequest acceptType: 'APPLICATION_JSON', authentication: githubCredentialsId(), contentType: 'APPLICATION_JSON', httpMode: mode, requestBody: json, url: serviceUrl(serviceEndpoint),
                     consoleLogResponseBody: VERBOSE_REQUESTS, validResponseCodes: "100:599"
     return resp;                    
 }
 
 
-def createDashingConfiguration(jiraKey)
-{
-    def json = asJson([project: jiraKey])
+def createDashingConfiguration(jiraKey, githubUser, githubPassword, githubRepoName, timeZone) {
+    def json = asJson([
+        project: jiraKey,
+        'github-user': githubUser,
+        'github-password': githubPassword,
+        'github-reponame': githubRepoName,
+        'time-zone': timeZone
+    ])
     
     httpRequest acceptType: 'APPLICATION_JSON', authentication: 'dashboardCredentials', contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: json, url: "${DASHING_END_POINT}/project",
                 consoleLogResponseBody: VERBOSE_REQUESTS 
@@ -368,6 +406,27 @@ def githubCredentialsId() {
     return "githubCredentials";
 }
 
+def lookupUsernamePasswordCredentials(uri, credentialsId) {
+    if (credentialsId == null)
+        return null;
+
+    return CredentialsMatchers.firstOrNull(
+        CredentialsProvider.lookupCredentials(
+                StandardUsernamePasswordCredentials.class,
+                (Item)null,
+                ACL.SYSTEM,
+                URIRequirementBuilder.fromUri(uri).build()),
+            CredentialsMatchers.withId(credentialsId)
+        );
+}
+
+def jenkinsTimeZoneId() {
+    def calendar = Calendar.getInstance();
+    def id = calendar.getTimeZone().SHORT;
+    def tz = TimeZone.getTimeZone(id.toString());
+    return tz.getID();
+}
+
 def isEmpty(s) {
     return s == null || "".equals(s)
 }
@@ -436,7 +495,15 @@ node ("master"){
     }
 
     stage("Dashboard project creation") {
-        createDashingConfiguration(JiraKey);
+        if (isEmpty(GithubUsername) || isEmpty(GithubPassword)) {
+            def credentials = lookupUsernamePasswordCredentials("", githubCredentialsId());
+            GithubUsername = credentials.getUsername();
+            GithubPassword = credentials.getPassword().getPlainText();
+        }
+        if (isEmpty(CustomTimeZone) {
+            CustomTimeZone = jenkinsTimeZoneId();
+        }
+        createDashingConfiguration(JiraKey, GithubUsername, GithubPassword, GithubRepoName, CustomTimeZone);
     }
 
     stage("Build server Slave setup") {
