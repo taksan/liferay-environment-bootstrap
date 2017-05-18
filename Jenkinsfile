@@ -414,18 +414,18 @@ def githubCredentialsId() {
     return "githubCredentials";
 }
 
-def lookupUsernamePasswordCredentials(uri, credentialsId) {
+def lookupUsernamePasswordCredentials(credentialsId) {
     if (credentialsId == null)
         return null;
 
     return CredentialsMatchers.firstOrNull(
         CredentialsProvider.lookupCredentials(
-                StandardUsernamePasswordCredentials.class,
-                (Item)null,
-                ACL.SYSTEM,
-                URIRequirementBuilder.fromUri("").build()),
-            CredentialsMatchers.withId(credentialsId)
-        );
+            StandardUsernamePasswordCredentials.class,
+            Jenkins.instance,
+            ACL.SYSTEM
+        ),
+        CredentialsMatchers.withId(credentialsId)
+    );
 }
 
 def jenkinsTimeZoneId() {
@@ -504,9 +504,9 @@ node ("master"){
 
     stage("Dashboard project creation") {
         if ( isEmpty(GithubUsername) || isEmpty(GithubPassword) ) {
-            def credentials = lookupUsernamePasswordCredentials("", githubCredentialsId());
+            def credentials = lookupUsernamePasswordCredentials(githubCredentialsId());
             GithubUsername = credentials.getUsername();
-            GithubPassword = credentials.getPassword();
+            GithubPassword = credentials.getPassword().plainText;
         }
         if (isEmpty(CustomTimeZone)) {
             CustomTimeZone = jenkinsTimeZoneId();
