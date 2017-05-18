@@ -39,7 +39,7 @@ ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAsaAmegjHI2/EbjJH8LHRwpQs1SuM6NP0kTIzRnEk/oHM
             stringParameter("GithubOrganization", "(optinal) Custom Github organization"),
             stringParameter("GithubUsername", "(optional) Custom Github user"),
             passwordParameter("GithubPassword", "(optional) Custom Github password"),
-            choiceParameter("CustomTimeZone", "(optional) Custom TimeZone", "displayName", "id", timeZoneDataProvider(), jenkinsTimeZoneId())
+            choiceParameter("CustomTimeZone", "(optional) Custom TimeZone. This value is used to calculate the Pull Request Aging of the dashboard more precisely. (Default value: " + jenkinsTimeZoneId() + ")", "displayName", "id", timeZoneDataProvider(), jenkinsTimeZoneId())
         ]
     ]
 ])
