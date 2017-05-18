@@ -6,6 +6,7 @@ import groovy.json.*;
 import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 import java.lang.IllegalArgumentException;
+import org.apache.commons.lang3.StringUtils;
 import org.liferay.sdlc.CredentialsManager;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -28,7 +29,7 @@ properties([disableConcurrentBuilds(),
             stringParameter("JiraProjectName","Project name"),
             stringParameter("GithubRepoName","Github Repo Name. The repo will become github.com/<ORGANIZATION>/<given name>"),
             stringParameter("ProjectDescription","Project Description"),
-            choiceParameter("ProjectOwner", "Project's owner user", "displayName", '{name+"/"+emailAddress}', jiraDataProvider()),
+            choiceParameter("ProjectOwner", "Project's owner user", "displayName", '{name+"/"+emailAddress}', jiraDataProvider(), ""),
             autocompleteParameter("JiraAdministrators", "Project administrators", "displayName", "name", jiraDataProvider()),
             autocompleteParameter("JiraDevelopers", "Project developers", "displayName", "name", jiraDataProvider()),
             autocompleteParameter("JiraCustomers", "Project customers", "displayName", "name", jiraDataProvider()),
@@ -38,7 +39,7 @@ ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAsaAmegjHI2/EbjJH8LHRwpQs1SuM6NP0kTIzRnEk/oHM
             stringParameter("GithubOrganization", "(optinal) Custom Github organization"),
             stringParameter("GithubUsername", "(optional) Custom Github user"),
             passwordParameter("GithubPassword", "(optional) Custom Github password"),
-            choiceParameter("CustomTimeZone", "(optional) Custom TimeZone", "displayName", "id", new InlineJsonDataProvider(timeZoneList()))
+            choiceParameter("CustomTimeZone", "(optional) Custom TimeZone", "displayName", "id", timeZoneDataProvider(), jenkinsTimeZoneId())
         ]
     ]
 ])
@@ -64,12 +65,12 @@ def autocompleteParameter(name, description, displayExpression, valueExpression,
         ];
 }
 
-def choiceParameter(name, description, displayExpression, valueExpression, dataProvider) {
+def choiceParameter(name, description, displayExpression, valueExpression, dataProvider, defaultValue) {
     return [
         $class: 'DropdownAutocompleteParameterDefinition',
         name: name,
         description: description,
-        defaultValue: '',
+        defaultValue: defaultValue,
         displayExpression: displayExpression,
         valueExpression: valueExpression,
         dataProvider: dataProvider
@@ -86,8 +87,7 @@ def jiraDataProvider() {
 def timeZoneDataProvider() {
     return [
         $class: 'InlineJsonDataProvider',
-        sandbox: false,
-        script: timeZoneList()
+        autoCompleteData: asJson(timeZoneList())
     ]
 }
 
@@ -97,7 +97,7 @@ def timeZoneList() {
     for (String id : ids) {
        results.add([ id: TimeZone.getTimeZone(id).getID(), displayName: timeZoneDisplayFormat(TimeZone.getTimeZone(id)) ]);
     }
-    return asJson(results);
+    return results;
 }
 
 def timeZoneDisplayFormat(TimeZone tz) {
@@ -423,7 +423,7 @@ def lookupUsernamePasswordCredentials(uri, credentialsId) {
                 StandardUsernamePasswordCredentials.class,
                 (Item)null,
                 ACL.SYSTEM,
-                URIRequirementBuilder.fromUri(uri).build()),
+                URIRequirementBuilder.fromUri("").build()),
             CredentialsMatchers.withId(credentialsId)
         );
 }
@@ -506,7 +506,7 @@ node ("master"){
         if ( isEmpty(GithubUsername) || isEmpty(GithubPassword) ) {
             def credentials = lookupUsernamePasswordCredentials("", githubCredentialsId());
             GithubUsername = credentials.getUsername();
-            GithubPassword = credentials.getPassword().getPlainText();
+            GithubPassword = credentials.getPassword();
         }
         if (isEmpty(CustomTimeZone)) {
             CustomTimeZone = jenkinsTimeZoneId();
