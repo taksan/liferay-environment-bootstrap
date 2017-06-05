@@ -470,9 +470,10 @@ node ("master"){
     }
 
     stage("Parameter existence validation") {
-        if (isJobPropertiesObsolete()) {
-            error("Some of the build parameters are missing. It might be due to obsolete JenkinsFile. Retry your build");
-        } 
+//        if (isJobPropertiesObsolete()) {
+//            error("Some of the build parameters are missing. It might be due to obsolete JenkinsFile. Retry your build");
+//        } 
+        println "ignore"
     }
 
     GITHUB_REPOS_API_ENDPOINT = "repos/${organization()}"
