@@ -299,7 +299,7 @@ def createDashingConfiguration(jiraKey, githubUser, githubPassword, githubRepoNa
 
 def updateTaskboardConfiguration(jiraKey, leaderJiraName)
 {
-    httpRequest acceptType: 'APPLICATION_JSON', authentication: TASKBOARD_AUTH_ID, httpMode: 'POST', url: "${TASKBOARD_END_POINT}/api/projects?projectKey=${jiraKey}",
+    httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', authentication: TASKBOARD_AUTH_ID, httpMode: 'POST', url: "${TASKBOARD_END_POINT}/api/projects?projectKey=${jiraKey}",
                 requestBody: asJson([projectKey: JiraKey, teamLeader: leaderJiraName]) ,consoleLogResponseBody: VERBOSE_REQUESTS
 
     httpRequest authentication: TASKBOARD_AUTH_ID, url: "${TASKBOARD_END_POINT}/cache/configuration", consoleLogResponseBody: VERBOSE_REQUESTS
