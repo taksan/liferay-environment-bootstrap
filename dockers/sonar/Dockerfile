@@ -13,7 +13,9 @@ RUN apt-get update
 COPY mysql_install.sh /tmp
 RUN /tmp/mysql_install.sh
 
-COPY sonar_install.sh /tmp
+COPY sonar*xml /tmp/
+
+COPY sonar_install.sh /tmp/
 RUN /tmp/sonar_install.sh
 
 VOLUME "$SONARQUBE_HOME/data"

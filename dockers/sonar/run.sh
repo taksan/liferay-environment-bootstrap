@@ -122,14 +122,9 @@ if $FIRST_TIME; then
     done
     echo
     echo "## Sonar ready. Setting up quality profiles..."
-    echo "1. Fetching..."
-    LANGUAGES="java js web"
-    for L in $LANGUAGES; do
-        curl -s -u admin:'R3m3mb3r1!' -X GET "http://cloud-10-0-40-8.liferay.com/api/qualityprofiles/export?language=$L" > /tmp/sonar-$L-way.xml
-    done
-    echo "2. restoring"
+    echo "1. restoring profiles"
     for F in /tmp/sonar-*; do
-        echo "Restroing $F"
+        echo "Restoring $F"
         curl -s -X POST -u admin:admin "http://localhost:9000/api/qualityprofiles/restore" --form backup=@$F
     done
     echo "## Quality profile setup complete"
