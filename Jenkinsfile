@@ -391,7 +391,7 @@ def isJobPropertiesObsolete() {
 @NonCPS
 def setupPermissionRoles(jiraKey)
 {
-    assignSidToRole(jiraKey, "@ViewMatchSidMacroRole(:admin=Delete/Configure)");
+    assignSidToRole(jiraKey, "@ViewMatchSidMacroRole");
 }
 
 @NonCPS
