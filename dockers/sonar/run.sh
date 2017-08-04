@@ -76,7 +76,7 @@ else
 fi 
 
 
-export SONARQUBE_JDBC_URL="jdbc:mysql://localhost:3306/sonar?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true&useConfigs=maxPerformance"
+export SONARQUBE_JDBC_URL="jdbc:mysql://localhost:3306/sonar?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true&useConfigs=maxPerformance&verifyServerCertificate=false&useSSL=true"
 
 cd $SONARQUBE_HOME
 FIRST_TIME=false
