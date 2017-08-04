@@ -43,7 +43,25 @@ function readpassword()
     eval "$1=$PASSWORD"
 }
 
-SONAR_PASS_FILE=$SONARQUBE_HOME/data/sonar.password 
+function readjiraurl()
+{
+    local URL_DEFINED=false
+
+    while ! $URL_DEFINED; do
+        read JIRA_URL
+        echo
+
+        if [[ -z "$JIRA_URL" ]]; then
+            echo "Jira URL should not be empty"
+        else
+            URL_DEFINED=true
+        fi
+    done
+    eval "$1=$JIRA_URL"
+}
+
+SONAR_PASS_FILE=$SONARQUBE_HOME/data/sonar.password
+JIRA_URL_FILE=$SONARQUBE_HOME/data/jira-url 
 
 if [ "${1:0:1}" != '-' ]; then
   exec "$@"
@@ -95,11 +113,17 @@ if [[ ! -e $SONAR_PASS_FILE ]]; then
     FLUSH PRIVILEGES;
 EOF
 
+    echo "## Type Jira URL (e.g. https://my-jira.com)"
+    readjiraurl JIRA_URL
+
+    echo "$JIRA_URL" > $JIRA_URL_FILE
     echo "$SONAR_PASSWORD" > $SONAR_PASS_FILE
 fi
-LOG_FILE=$SONARQUBE_HOME/data/sonar.log
 
+LOG_FILE=$SONARQUBE_HOME/data/sonar.log
 SONAR_PASSWORD=$(cat $SONAR_PASS_FILE)
+JIRA_URL=$(cat $JIRA_URL_FILE)
+
 if [[ -e $LOG_FILE ]]; then
     mv $LOG_FILE $LOG_FILE.$(date +%Y%m%d%H%M%S)
 fi
@@ -111,6 +135,8 @@ java -jar lib/sonar-application-$SONAR_VERSION.jar \
   -Dsonar.jdbc.username="sonar" \
   -Dsonar.jdbc.password="$SONAR_PASSWORD" \
   -Dsonar.jdbc.url="$SONARQUBE_JDBC_URL" \
+  -Dsonar.security.realm=JIRA \
+  -Dsonar.auth.jira.url="$JIRA_URL" \
   -Dsonar.web.javaAdditionalOpts="$SONARQUBE_WEB_JVM_OPTS -Djava.security.egd=file:/dev/./urandom" \
   "$@" | tee $LOG_FILE &
 PID=$!

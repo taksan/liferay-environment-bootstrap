@@ -21,3 +21,4 @@ curl -L -o $PLUGINS_DIR/sonar-scm-git-plugin-1.2.jar https://sonarsource.bintray
 curl -L -o $PLUGINS_DIR/sonar-scm-svn-plugin-1.4.0.522.jar https://sonarsource.bintray.com/Distribution/sonar-scm-svn-plugin/sonar-scm-svn-plugin-1.4.0.522.jar
 curl -L -o $PLUGINS_DIR/sonar-javascript-plugin-3.0.0.4962.jar https://sonarsource.bintray.com/Distribution/sonar-javascript-plugin/sonar-javascript-plugin-3.0.0.4962.jar
 curl -L -o $PLUGINS_DIR/sonar-java-plugin-4.9.0.9858.jar https://sonarsource.bintray.com/Distribution/sonar-java-plugin/sonar-java-plugin-4.9.0.9858.jar
+curl -L -o $PLUGINS_DIR/sonar-auth-jira-plugin-1.0.0.jar http://repo:8080/archiva/repository/internal/br/com/objective/sonar-auth-jira-plugin/1.0.0/sonar-auth-jira-plugin-1.0.0.jar
