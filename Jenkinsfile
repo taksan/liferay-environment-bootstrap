@@ -189,7 +189,7 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
                 "Customers"          : prepareJenkinsUserList(customers),
                 "Users"              : [ "gs-task-board" ],
             ],
-            projectTypeKey           : "business",
+            projectTypeKey           : "software",
             projectTemplateKey       : "com.atlassian.jira-core-project-templates:jira-core-project-management"
         ] + projectHardData);
     projectHardData = null;
