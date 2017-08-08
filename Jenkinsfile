@@ -204,11 +204,11 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
         error("Jira project creation failed.");
     }
 
-    def assigneeJson = asJson([ assigneeType: 'UNASSIGNED' ]);
+    def assigneeJson = asJson([ assigneeType : 'UNASSIGNED' ]);
 
     // change default assignee to UNASSIGNED
     resp = httpRequest acceptType: 'APPLICATION_JSON', authentication: JIRA_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'PUT', requestBody: assigneeJson, 
-            url: "${JIRA_REST_ENDPOINT}/rest/project/${jiraKey}", consoleLogResponseBody: VERBOSE_REQUESTS, validResponseCodes: "100:599"
+            url: "${JIRA_REST_ENDPOINT}/rest/api/latest/project/${jiraKey}", consoleLogResponseBody: VERBOSE_REQUESTS, validResponseCodes: "100:599"
 
 }
 
