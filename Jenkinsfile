@@ -169,7 +169,10 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
             [ id: "18630", schemeId: "19990" ], 
             [ id: "18520", schemeId: "19781" ], 
             [ id: "18621", schemeId: "19981" ], 
-            [ id: "18622", schemeId: "19982" ] ]
+            [ id: "18622", schemeId: "19982" ],
+            [ id: "19434", schemeId: "20898" ],
+            [ id: "19435", schemeId: "20899" ]
+            ]
     ];
     if (env.OVERRIDE_DATA) {
         projectHardData = new JsonSlurper().parseText(env.OVERRIDE_DATA);
