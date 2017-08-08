@@ -203,13 +203,6 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
         println json
         error("Jira project creation failed.");
     }
-
-    def assigneeJson = asJson([ assigneeType : 'UNASSIGNED' ]);
-
-    // change default assignee to UNASSIGNED
-    resp = httpRequest acceptType: 'APPLICATION_JSON', authentication: JIRA_CREDENTIALS_ID, contentType: 'APPLICATION_JSON', httpMode: 'PUT', requestBody: assigneeJson, 
-            url: "${JIRA_REST_ENDPOINT}/rest/api/latest/project/${jiraKey}", consoleLogResponseBody: VERBOSE_REQUESTS, validResponseCodes: "100:599"
-
 }
 
 def addJenkinsfileForExistingProjects(repoName, jiraProjectName, leaderMail)
