@@ -181,9 +181,9 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
             description              : description,
             lead                     : lead,
             userInRoles              :[
-                "Administrators"     : prepareJenkinsUserList(administrators), 
-                "Developers"         : prepareJenkinsUserList(developers), 
-                "Customers"          : prepareJenkinsUserList(customers),
+                "Administrators"     : administrators,
+                "Developers"         : developers,
+                "Customers"          : customers,
                 "Users"              : [ "gs-task-board" ],
             ],
             projectTypeKey           : "business",
@@ -297,13 +297,17 @@ def createDashingConfiguration(jiraKey, githubUser, githubPassword, githubRepoNa
                 consoleLogResponseBody: VERBOSE_REQUESTS 
 }
 
-def updateTaskboardConfiguration(jiraKey, leaderJiraName)
-{
-    httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', authentication: TASKBOARD_AUTH_ID, httpMode: 'POST', url: "${TASKBOARD_END_POINT}/api/projects?projectKey=${jiraKey}",
-                requestBody: asJson([projectKey: JiraKey, teamLeader: leaderJiraName]) ,consoleLogResponseBody: VERBOSE_REQUESTS
+def updateTaskboardConfiguration(jiraKey, leaderJiraName, administrators, developers, customers) {
+    httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', authentication: TASKBOARD_AUTH_ID,
+                httpMode: 'POST', url: "${TASKBOARD_END_POINT}/api/projects?projectKey=${jiraKey}",
+                requestBody: asJson([
+                    projectKey: JiraKey,
+                    teamLeader: leaderJiraName,
+                    teamMembers: administrators + developers + customers
+                ]),
+                consoleLogResponseBody: VERBOSE_REQUESTS
 
     httpRequest authentication: TASKBOARD_AUTH_ID, url: "${TASKBOARD_END_POINT}/cache/configuration", consoleLogResponseBody: VERBOSE_REQUESTS
-
 }
 
 def updateTemplateVariables(templateName, varMap)
@@ -481,6 +485,9 @@ node ("master"){
     def leaderJiraName = ProjectOwner.split("/")[0]
     def leaderMail = ProjectOwner.split("/")[1]
 
+    def jiraAdministratorsList = prepareJenkinsUserList(JiraAdministrators.split(","))
+    def jiraDevelopersList = prepareJenkinsUserList(JiraDevelopers.split(","))
+    def jiraCustomersList = prepareJenkinsUserList(JiraCustomers.split(","))
 
     stage("Github Project Setup") {
         if (!isEmpty(GithubOrganization)) {
@@ -496,9 +503,9 @@ node ("master"){
 
     stage("Jira Project Creation") {
         createJiraProject(JiraKey, JiraProjectName, ProjectDescription, leaderJiraName, 
-            JiraAdministrators.split(","), 
-            JiraDevelopers.split(","), 
-            JiraCustomers.split(","));
+            jiraAdministratorsList,
+            jiraDevelopersList,
+            jiraCustomersList);
     }
 
     stage("Projects Jobs Creation") {
@@ -522,7 +529,10 @@ node ("master"){
     }
 
     stage("Taskboard project setup") {
-        updateTaskboardConfiguration(JiraKey, leaderJiraName);
+        updateTaskboardConfiguration(JiraKey, leaderJiraName,
+            jiraAdministratorsList,
+            jiraDevelopersList,
+            jiraCustomersList);
     }
 
     stage("Setting up project permission scheme on Jenkins") {
