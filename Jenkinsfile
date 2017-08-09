@@ -170,8 +170,8 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
             [ id: "18520", schemeId: "19781" ], 
             [ id: "18621", schemeId: "19981" ], 
             [ id: "18622", schemeId: "19982" ],
-            [ id: "19434", schemeId: "20898" ],
-            [ id: "19435", schemeId: "20899" ]
+            [ id: "19625", schemeId: "21188" ],
+            [ id: "19626", schemeId: "21187" ]
             ]
     ];
     if (env.OVERRIDE_DATA) {
