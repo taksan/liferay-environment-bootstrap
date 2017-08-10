@@ -477,6 +477,7 @@ node ("master"){
 //            error("Some of the build parameters are missing. It might be due to obsolete JenkinsFile. Retry your build");
 //        } 
         println "ignore"
+        println "revert me"
     }
 
     GITHUB_REPOS_API_ENDPOINT = "repos/${organization()}"
