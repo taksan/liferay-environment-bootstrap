@@ -303,7 +303,7 @@ def updateTaskboardConfiguration(jiraKey, leaderJiraName, administrators, develo
                 requestBody: asJson([
                     projectKey: JiraKey,
                     teamLeader: leaderJiraName,
-                    teamMembers: administrators + developers + customers
+                    teamMembers: concatLStrings(leaderJiraName, administrators, developers, customers)
                 ]),
                 consoleLogResponseBody: VERBOSE_REQUESTS
 
@@ -373,6 +373,19 @@ def push(dir) {
 
 def asJson(data) {
     return new JsonBuilder(data).toPrettyString();
+}
+
+def concatLStrings(String[] [] arrays) {
+    String[] concatenated = "";
+    for (String[] array : arrays) {
+        if (arrays != null && arrays.length > 0) {
+            for (String value : array) {
+                if (!isEmpty(value))
+                    concatenated += value;
+            }
+        }
+    }
+    return concatenated
 }
 
 def isJobPropertiesObsolete() {
