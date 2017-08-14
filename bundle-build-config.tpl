@@ -36,16 +36,16 @@ This job uploads the build to nexus.
 
 properties([
   parameters([
-	[$class: 'DropdownAutocompleteParameterDefinition', name: 'versionName', description: 'Select the desired fix  pach/patch version.',
-		dataProvider: [$class: 'GroovyDataProvider', sandbox: true, script: '''
+    [$class: 'DropdownAutocompleteParameterDefinition', name: 'PatchVersion', description: 'Select the desired fix  pach/patch version.',
+        dataProvider: [$class: 'GroovyDataProvider', sandbox: true, script: '''
 return requestBuilder
     .url("${NexusHostUrl}/service/siesta/rest/v1/script/findassets/run")
     .credentials("nexusCredentials")
     .header("Content-Type","text/plain")
-    .body(["repoName":"patched-bundle","pattern":"patched-bundle-%"])
-    .post().contentsJson.result.replace("/repository/patched-bundle/patched-bundle-","").replace(".zip", "")
-		'''], 
-		defaultValue: '',  displayExpression: '', valueExpression: '']
+    .body(["repoName":"patched-bundle","pattern":"%.zip"])
+    .post().contentsJson.result.replace("/repository/patched-bundle/","").replace(".zip", "")
+        '''], 
+        defaultValue: '',  displayExpression: '', name: 'versionName', valueExpression: '']
     ])])
 
 
@@ -53,6 +53,8 @@ node ("#{_GITHUB_REPOSITORY_NAME_}") {
   def githubOrganization = "#{_GITHUB_ORGANIZATION_}";
   def githubProjectName = "#{_GITHUB_REPOSITORY_NAME_}";
   def githubCredentialsId = "#{_GITHUB_CREDENTIALS_ID_}"
+
+  def buildNumber = build_number
   
   stage("Cleanup") {
     step([$class: 'WsCleanup'])
@@ -71,27 +73,29 @@ node ("#{_GITHUB_REPOSITORY_NAME_}") {
             userRemoteConfigs: [
                 [credentialsId: githubCredentialsId, 
                 url: "https://github.com/${githubOrganization}/${githubProjectName}.git"]]])
-  }   
+  }  
   stage('Package') {
         if (versionName == null)
             error("Provide the versionName");
-            
+                
         timestamps {
-            gradle "-Pliferay.workspace.bundle.url=${PatchNexusHostUrl}/repository/patched-bundle/patched-bundle-${versionName}.zip -Pliferay.workspace.environment=vanilla distBundleZip --no-daemon"
-            renameTo "build/${JOB_NAME}.zip", "build/${githubProjectName}-${build_number}.zip"
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "nexusCredentials", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD']]) {
+                gradle "-Pliferay.workspace.bundle.url=${NexusHostUrl}/repository/patched-bundle/${versionName}.zip -Pliferay.workspace.environment=vanilla distBundleZip --no-daemon"
+                renameTo "build/${JOB_NAME}.zip", "build/${githubProjectName}-${buildNumber}.zip"
+            }
         }
   }
   stage('Nexus Upload') {
        nexusProtocol = NexusHostUrl.split(":")[0];
        nexusIpPort = NexusHostUrl.replaceFirst("^.*?://","")
-       nexusArtifactUploader artifacts: [[artifactId: githubProjectName, classifier: '', file: "build/${githubProjectName}-${build_number}.zip", type: 'zip']], 
+       nexusArtifactUploader artifacts: [[artifactId: githubProjectName, classifier: '', file: "build/${githubProjectName}-${buildNumber}.zip", type: 'zip']],  
              credentialsId: 'nexusCredentials',
-             groupId: '/', 
+             groupId: '/#{_JIRA_KEY_}', 
              nexusUrl: nexusIpPort,
              nexusVersion: 'nexus3',
              protocol: 'http',
              repository: 'jenkins-build',
-             version: build_number
+             version: buildNumber
   }
 }
 </script>

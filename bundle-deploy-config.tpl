@@ -35,6 +35,7 @@ node ("#{_GITHUB_REPOSITORY_NAME_}") {
     def githubOrganization = "#{_GITHUB_ORGANIZATION_}";
     def githubProjectName = "#{_GITHUB_REPOSITORY_NAME_}";
     def githubCredentialsId = "#{_GITHUB_CREDENTIALS_ID_}"
+    def jiraKey = "#{_JIRA_KEY_}"
 
     stage("Cleanup") {
         step([$class: 'WsCleanup'])
@@ -83,7 +84,12 @@ node ("#{_GITHUB_REPOSITORY_NAME_}") {
             echo "Downloading bundle with build number ${bundle_build_number} (${NexusHostUrl}/repository/jenkins-build/${bundle_build_number}/${bundle_artifact_zip}) to ${bundle_artifact_zip}"
     
             // download to local file
-            fp = fops.downloadTo("${NexusHostUrl}/repository/jenkins-build/${bundle_build_number}/${bundle_artifact_zip}", bundle_artifact_zip);
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "nexusCredentials", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD']]) {
+                fops.downloadToWithAuth("${NexusHostUrl}/repository/jenkins-build/${jiraKey}/${githubProjectName}/${bundle_build_number}/${bundle_artifact_zip}", 
+                                         bundle_artifact_zip, 
+                                         env.NEXUS_USER, 
+                                         env.NEXUS_PASSWORD);
+            }
             
             // Add in configs for specified environment
             fops.mkdir(bundle_artifact_dir);
