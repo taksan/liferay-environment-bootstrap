@@ -20,6 +20,7 @@ import static org.liferay.sdlc.JenkinsUtils.*;
 
 @Field final JIRA_CREDENTIALS_ID = "jiraCredentials";
 @Field final TASKBOARD_AUTH_ID = "taskboardCredentials"
+@Field final SONAR_CREDENTIALS_ID = "sonarCredentials";
 @Field final VERBOSE_REQUESTS = false;
 
 properties([disableConcurrentBuilds(),
@@ -205,8 +206,7 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
     }
 }
 
-def addJenkinsfileForExistingProjects(repoName, jiraProjectName, leaderMail)
-{
+def addJenkinsfileForExistingProjects(repoName, jiraProjectName, leaderMail) {
     if (checkFileExists("Jenkinsfile", repoName)) {
         println "Jenkinsfile already present in repo ${repoName}. Nothing to do here."
         return; 
@@ -286,7 +286,6 @@ def githubRequest(serviceEndpoint, mode, json) {
     return resp;                    
 }
 
-
 def createDashingConfiguration(jiraKey, githubUser, githubPassword, githubRepoName, timeZone) {
     def json = asJson([
         project: jiraKey,
@@ -322,8 +321,57 @@ def updateTaskboardConfiguration(jiraKey, leaderJiraName, administrators, develo
     httpRequest authentication: TASKBOARD_AUTH_ID, url: "${TASKBOARD_END_POINT}/cache/configuration", consoleLogResponseBody: VERBOSE_REQUESTS
 }
 
-def updateTemplateVariables(templateName, varMap)
-{
+def sonarRequest(serviceEndpoint, mode, parameters) {
+    def url = SONAR_END_POINT + serviceEndpoint;
+
+    if (isEmpty(parameters))
+        url += "?" + asQueryString(parameters)
+
+    resp = httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON',
+            url: url, authentication: SONAR_CREDENTIALS_ID, httpMode: mode,
+            consoleLogResponseBody: VERBOSE_REQUESTS, validResponseCodes: "100:599";
+
+    return resp;
+}
+
+def sonarCreateProject(projectName, projectKey) {
+    resp = sonarRequest("api/projects/create", "POST", [name: projectName, project: projectKey]);
+    if (resp.status >= 400)
+        println "Sonar Project ${projectKey} already exists.";
+    else {
+        println "Sonar Project ${projectKey} created:";
+        println resp.content;
+    }
+    return resp.content;
+}
+
+def sonarCreateGroup(groupName, groupDescription) {
+    resp = sonarRequest("api/user_groups/create", "POST", [name: groupName, description: groupDescription]);
+    if (resp.status >= 400) {
+        println "Sonar Group ${groupName} already exists.";
+    } else {
+        println "Sonar Group ${groupName} created:";
+        println resp.content;
+    }
+    return resp.content;
+}
+
+def sonarAddPermission(groupName, projectKey, permission) {
+    resp = sonarRequest("api/permissions/add_group", "POST", [projectKey: projectKey, permission: permission, groupName: groupName]);
+    if (resp.status >= 400)
+        error(resp.content);
+    println "Sonar Permission '${permission}' added to Group ${groupName} for Project ${projectKey}:";
+    return resp.content;
+}
+
+def createSonarProjectAndGroup(projectName, projectKey, groupName) {
+    sonarCreateProject(projectName, projectKey);
+    sonarCreateGroup(groupName, "");
+    sonarAddPermission(groupName, projectKey, "user");
+    sonarAddPermission(groupName, projectKey, "codeviewer")
+}
+
+def updateTemplateVariables(templateName, varMap) {
     def txt = readFile file: templateName;
     for (e in varMap) {
         txt = txt.replace("#{"+e.key+"}", e.value);
@@ -437,6 +485,11 @@ def prepareJenkinsUserList(array) {
     return array;
 }
 
+@NonCPS
+def asQueryString(parameters) {
+    return parameters.collect{ k,v -> "${k}=${URLEncoder.encode(v)}" }.join('&')
+}
+
 def organization() {
     if (isEmpty(GithubOrganization))
         return ORGANIZATION;
@@ -493,6 +546,9 @@ node ("master"){
 
         if (env.TASKBOARD_END_POINT == null)
             error("You must set TASKBOARD_END_POINT in the global properties");
+
+        if (env.SONAR_END_POINT == null)
+            error("You must set SONAR_END_POINT in the global properties");
 
         if (isEmpty(ProjectOwner)) 
             error("You must provide the project owner ${ProjectOwner}")
@@ -572,5 +628,9 @@ node ("master"){
 
     stage("Setting up project permission scheme on Jenkins") {
         setupPermissionRoles(JiraKey);
+    }
+
+    stage("Sonar project and group creation") {
+        createSonarProjectAndGroup(JiraProjectName, GithubRepoName, JiraKey);
     }
 }
