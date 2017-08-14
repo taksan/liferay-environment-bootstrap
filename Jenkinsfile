@@ -303,7 +303,16 @@ def updateTaskboardConfiguration(jiraKey, leaderJiraName, administrators, develo
                 requestBody: asJson([
                     projectKey: JiraKey,
                     teamLeader: leaderJiraName,
-                    teamMembers: concatLStrings(leaderJiraName, administrators, developers, customers)
+                    teams: [
+                        {
+                            name: "${JiraKey}_DEV",
+                            members: concatLStrings(leaderJiraName, administrators, developers)
+                        },
+                        {
+                            name: "${JiraKey}_CUSTOMER",
+                            members: concatLStrings(customers)
+                        }
+                    ]
                 ]),
                 consoleLogResponseBody: VERBOSE_REQUESTS
 
