@@ -306,11 +306,11 @@ def updateTaskboardConfiguration(jiraKey, leaderJiraName, administrators, develo
                     teams: [
                         {
                             name: "${JiraKey}_DEV",
-                            members: concatLStrings(leaderJiraName, administrators, developers)
+                            members: getAllUniqueValues(leaderJiraName + administrators + developers)
                         },
                         {
                             name: "${JiraKey}_CUSTOMER",
-                            members: concatLStrings(customers)
+                            members: getAllUniqueValues(customers)
                         }
                     ]
                 ]),
@@ -384,17 +384,23 @@ def asJson(data) {
     return new JsonBuilder(data).toPrettyString();
 }
 
-def concatLStrings(String[] [] arrays) {
-    String[] concatenated = "";
-    for (String[] array : arrays) {
-        if (arrays != null && arrays.length > 0) {
-            for (String value : array) {
-                if (!isEmpty(value))
-                    concatenated += value;
-            }
+def getAllUniqueValues(arrayToAdd) {
+    List<String> unique = new ArrayList<>();
+    if (!isEmptyArray(arrayToAdd)) {
+        for (value in arrayToAdd) {
+            if (!isEmpty(value) && !existsInArray(unique, value))
+                unique.add(value);
         }
     }
-    return concatenated
+    return !isEmptyArray(unique) ? unique : null;
+}
+
+def existsInArray(array, toCompare) {
+    for (value in array) {
+        if (toCompare == value)
+            return true;
+    }
+    return false;
 }
 
 def isJobPropertiesObsolete() {
@@ -465,6 +471,10 @@ def jenkinsTimeZoneId() {
 
 def isEmpty(s) {
     return s == null || "".equals(s)
+}
+
+def isEmptyArray(a) {
+    return a == null || a.size() == 0;
 }
 
 node ("master"){
