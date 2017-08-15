@@ -184,9 +184,9 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
             description              : description,
             lead                     : lead,
             userInRoles              :[
-                "Administrators"     : prepareJenkinsUserList(administrators), 
-                "Developers"         : prepareJenkinsUserList(developers), 
-                "Customers"          : prepareJenkinsUserList(customers),
+                "Administrators"     : administrators,
+                "Developers"         : developers,
+                "Customers"          : customers,
                 "Users"              : [ "gs-task-board" ],
             ],
             projectTypeKey           : "software",
@@ -300,13 +300,26 @@ def createDashingConfiguration(jiraKey, githubUser, githubPassword, githubRepoNa
                 consoleLogResponseBody: VERBOSE_REQUESTS 
 }
 
-def updateTaskboardConfiguration(jiraKey, leaderJiraName)
-{
-    httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', authentication: TASKBOARD_AUTH_ID, httpMode: 'POST', url: "${TASKBOARD_END_POINT}/api/projects?projectKey=${jiraKey}",
-                requestBody: asJson([projectKey: JiraKey, teamLeader: leaderJiraName]) ,consoleLogResponseBody: VERBOSE_REQUESTS
+def updateTaskboardConfiguration(jiraKey, leaderJiraName, administrators, developers, customers) {
+    httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', authentication: TASKBOARD_AUTH_ID,
+                httpMode: 'POST', url: "${TASKBOARD_END_POINT}/api/projects?projectKey=${jiraKey}",
+                requestBody: asJson([
+                    projectKey: JiraKey,
+                    teamLeader: leaderJiraName,
+                    teams: [
+                        {
+                            name: "${JiraKey}_DEV",
+                            members: getAllUniqueValues(leaderJiraName + administrators + developers)
+                        },
+                        {
+                            name: "${JiraKey}_CUSTOMER",
+                            members: getAllUniqueValues(customers)
+                        }
+                    ]
+                ]),
+                consoleLogResponseBody: VERBOSE_REQUESTS
 
     httpRequest authentication: TASKBOARD_AUTH_ID, url: "${TASKBOARD_END_POINT}/cache/configuration", consoleLogResponseBody: VERBOSE_REQUESTS
-
 }
 
 def updateTemplateVariables(templateName, varMap)
@@ -372,6 +385,25 @@ def push(dir) {
 
 def asJson(data) {
     return new JsonBuilder(data).toPrettyString();
+}
+
+def getAllUniqueValues(arrayToAdd) {
+    List<String> unique = new ArrayList<>();
+    if (!isEmptyArray(arrayToAdd)) {
+        for (value in arrayToAdd) {
+            if (!isEmpty(value) && !existsInArray(unique, value))
+                unique.add(value);
+        }
+    }
+    return !isEmptyArray(unique) ? unique : null;
+}
+
+def existsInArray(array, toCompare) {
+    for (value in array) {
+        if (toCompare == value)
+            return true;
+    }
+    return false;
 }
 
 def isJobPropertiesObsolete() {
@@ -444,6 +476,10 @@ def isEmpty(s) {
     return s == null || "".equals(s)
 }
 
+def isEmptyArray(a) {
+    return a == null || a.size() == 0;
+}
+
 node ("master"){
     stage('Pre validation') {
         if (env.DASHING_END_POINT == null) 
@@ -484,6 +520,9 @@ node ("master"){
     def leaderJiraName = ProjectOwner.split("/")[0]
     def leaderMail = ProjectOwner.split("/")[1]
 
+    def jiraAdministratorsList = prepareJenkinsUserList(JiraAdministrators.split(","))
+    def jiraDevelopersList = prepareJenkinsUserList(JiraDevelopers.split(","))
+    def jiraCustomersList = prepareJenkinsUserList(JiraCustomers.split(","))
 
     stage("Github Project Setup") {
         if (!isEmpty(GithubOrganization)) {
@@ -499,9 +538,9 @@ node ("master"){
 
     stage("Jira Project Creation") {
         createJiraProject(JiraKey, JiraProjectName, ProjectDescription, leaderJiraName, 
-            JiraAdministrators.split(","), 
-            JiraDevelopers.split(","), 
-            JiraCustomers.split(","));
+            jiraAdministratorsList,
+            jiraDevelopersList,
+            jiraCustomersList);
     }
 
     stage("Projects Jobs Creation") {
@@ -525,7 +564,10 @@ node ("master"){
     }
 
     stage("Taskboard project setup") {
-        updateTaskboardConfiguration(JiraKey, leaderJiraName);
+        updateTaskboardConfiguration(JiraKey, leaderJiraName,
+            jiraAdministratorsList,
+            jiraDevelopersList,
+            jiraCustomersList);
     }
 
     stage("Setting up project permission scheme on Jenkins") {
