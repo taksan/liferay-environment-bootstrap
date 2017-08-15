@@ -324,7 +324,7 @@ def updateTaskboardConfiguration(jiraKey, leaderJiraName, administrators, develo
 def sonarRequest(serviceEndpoint, mode, parameters) {
     def url = SONAR_END_POINT + serviceEndpoint;
 
-    if (isEmpty(parameters))
+    if (!isEmpty(parameters))
         url += "?" + asQueryString(parameters)
 
     resp = httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON',
@@ -334,25 +334,60 @@ def sonarRequest(serviceEndpoint, mode, parameters) {
     return resp;
 }
 
+def sonarGetAllProjects() {
+    resp = sonarRequest("api/components/search", "GET", [qualifiers: "TRK", ps: "499"]);
+    if (resp.status >= 400)
+        error(resp.content);
+    return asObject(resp.content).components;
+}
+
+def sonarProjectExists(projectKey) {
+    def projects = sonarGetAllProjects();
+    for(i = 0; i < projects.size(); i++) {
+        if (projects[i].key == projectKey) {
+            println "Sonar Project '${projectKey}' already exists.";
+            println projects[i];
+            return true;
+        }
+    }
+    return false;
+}
+
 def sonarCreateProject(projectName, projectKey) {
     resp = sonarRequest("api/projects/create", "POST", [name: projectName, project: projectKey]);
     if (resp.status >= 400)
-        println "Sonar Project ${projectKey} already exists.";
-    else {
-        println "Sonar Project ${projectKey} created:";
-        println resp.content;
-    }
+        error(resp.content);
+    println "Sonar Project '${projectKey}' created:";
+    println resp.content;
     return resp.content;
+}
+
+def sonarGetAllGroups() {
+    resp = sonarRequest("api/user_groups/search", "GET", [ps: "499"]);
+    if (resp.status >= 400)
+        error(resp.content);
+    return asObject(resp.content).groups;
+}
+
+def sonarGroupExists(groupName) {
+    def groups = sonarGetAllGroups();
+    for(i = 0; i < groups.size(); i++) {
+        if (groups[i].name == groupName) {
+            println "Sonar Group '${groupName}' already exists.";
+            println groups[i];
+            return true;
+        }
+    }
+    return false;
 }
 
 def sonarCreateGroup(groupName, groupDescription) {
     resp = sonarRequest("api/user_groups/create", "POST", [name: groupName, description: groupDescription]);
     if (resp.status >= 400) {
-        println "Sonar Group ${groupName} already exists.";
-    } else {
-        println "Sonar Group ${groupName} created:";
-        println resp.content;
+        error(resp.content);
     }
+    println "Sonar Group '${groupName}' created:";
+    println resp.content;
     return resp.content;
 }
 
@@ -365,10 +400,12 @@ def sonarAddPermission(groupName, projectKey, permission) {
 }
 
 def createSonarProjectAndGroup(projectName, projectKey, groupName) {
-    sonarCreateProject(projectName, projectKey);
-    sonarCreateGroup(groupName, "");
+    if (!sonarProjectExists(projectKey))
+        sonarCreateProject(projectName, projectKey);
+    if (!sonarGroupExists(groupName))
+        sonarCreateGroup(groupName, "");
     sonarAddPermission(groupName, projectKey, "user");
-    sonarAddPermission(groupName, projectKey, "codeviewer")
+    sonarAddPermission(groupName, projectKey, "codeviewer");
 }
 
 def updateTemplateVariables(templateName, varMap) {
@@ -435,6 +472,7 @@ def asJson(data) {
     return new JsonBuilder(data).toPrettyString();
 }
 
+<<<<<<< 8a053175b5ad6da60c193dfa39bdf31095d1057a
 def getAllUniqueValues(arrayToAdd) {
     List<String> unique = new ArrayList<>();
     if (!isEmptyArray(arrayToAdd)) {
@@ -452,6 +490,10 @@ def existsInArray(array, toCompare) {
             return true;
     }
     return false;
+=======
+def asObject(data) {
+    return new JsonSlurper().parseText(data);
+>>>>>>> [GSSDLC-139] After review - Sonar: Support to create project and group
 }
 
 def isJobPropertiesObsolete() {
