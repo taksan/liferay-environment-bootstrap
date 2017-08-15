@@ -383,9 +383,8 @@ def sonarGroupExists(groupName) {
 
 def sonarCreateGroup(groupName, groupDescription) {
     resp = sonarRequest("api/user_groups/create", "POST", [name: groupName, description: groupDescription]);
-    if (resp.status >= 400) {
+    if (resp.status >= 400)
         error(resp.content);
-    }
     println "Sonar Group '${groupName}' created:";
     println resp.content;
     return resp.content;
@@ -472,7 +471,6 @@ def asJson(data) {
     return new JsonBuilder(data).toPrettyString();
 }
 
-<<<<<<< 8a053175b5ad6da60c193dfa39bdf31095d1057a
 def getAllUniqueValues(arrayToAdd) {
     List<String> unique = new ArrayList<>();
     if (!isEmptyArray(arrayToAdd)) {
@@ -490,10 +488,10 @@ def existsInArray(array, toCompare) {
             return true;
     }
     return false;
-=======
+}
+
 def asObject(data) {
     return new JsonSlurper().parseText(data);
->>>>>>> [GSSDLC-139] After review - Sonar: Support to create project and group
 }
 
 def isJobPropertiesObsolete() {
