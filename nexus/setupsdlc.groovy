@@ -1,6 +1,5 @@
 /*
-This script setups view/edit permissions for a ROLE named "jiraKey" to access artifacts matching:
-
+This script setups view/edit permissions for a ROLE named "jiraKey" to access artifacts matching the jira key. 
 */
 import org.sonatype.nexus.common.entity.*
 import org.sonatype.nexus.security.*
@@ -12,7 +11,7 @@ import groovy.json.JsonSlurper
 
 def request = new JsonSlurper().parseText(args);
 assert request.jiraKey: 'jiraKey is required';
-assert request.reppo: 'repo is required';
+assert request.repoName: 'repoName is required';
 
 def jiraKey = request.jiraKey
 
@@ -37,14 +36,14 @@ selectorManager.create(selectorConfig)
 // create content selector privilege
 def projectPrivProperties = ImmutableMap.builder()
   .put("contentSelector", selectorConfig.name)
-  .put("repository", request.repo)
+  .put("repository", request.repoName)
   .put("actions", "browse,read,edit")
   .build()
 
 def projectPrivilege = new org.sonatype.nexus.security.privilege.Privilege(
     id: "jenkins-${jiraKey}-priv",
     version: '',
-    name: "sdlc-${jiraKey}-priv",
+    name: "_sdlc-${jiraKey}-priv",
     description: "${jiraKey} Content Selector privilege",
     type: "repository-content-selector",
     properties: projectPrivProperties

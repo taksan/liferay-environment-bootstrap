@@ -1,3 +1,6 @@
+/*
+ This script allows you to query artifacts by pattern in a given repo.
+ */
 import org.sonatype.nexus.repository.storage.Asset
 import org.sonatype.nexus.repository.storage.Query
 import org.sonatype.nexus.repository.storage.StorageFacet
@@ -22,4 +25,3 @@ def urls = assets.collect { "/repository/${repo.name}/${it.name()}" };
 tx.commit();
 
 return JsonOutput.toJson(urls);
-//return urls;

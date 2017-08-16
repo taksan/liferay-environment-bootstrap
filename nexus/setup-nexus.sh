@@ -2,8 +2,7 @@
 
 set -e
 
-export NEXUS=http://localhost:8081
-#export NEXUS=https://gs-nexus-liferay-uat.objective.com.br
+export NEXUS=${1:?}
 
 echo "Type the nexus admin password:"
 read -s PASSWORD
