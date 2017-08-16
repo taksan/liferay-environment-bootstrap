@@ -1,7 +1,8 @@
 #!/bin/bash
 
+set -e
 name=$1
 
 printf "Deleting Integration API Script $name\n\n"
 
-curl -v -X DELETE -u admin:$PASSWORD  "$NEXUS/service/siesta/rest/v1/script/$name"
+curl --fail-early -s -X DELETE -u admin:$PASSWORD  "$NEXUS/service/siesta/rest/v1/script/$name"

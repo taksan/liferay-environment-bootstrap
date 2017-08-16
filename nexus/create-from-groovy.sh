@@ -5,7 +5,7 @@ groovy=$2
 
 printf "Creating Integration API Script from $groovy\n\n"
 
-curl -v -u admin:$PASSWORD --header "Content-Type: application/json" "$NEXUS/service/siesta/rest/v1/script/" -d \
+curl --fail-early -u admin:$PASSWORD --header "Content-Type: application/json" "$NEXUS/service/siesta/rest/v1/script/" -d \
 "
 {
   \"name\": \"$name\",
