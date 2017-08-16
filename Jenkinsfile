@@ -21,6 +21,7 @@ import static org.liferay.sdlc.JenkinsUtils.*;
 @Field final JIRA_CREDENTIALS_ID = "jiraCredentials";
 @Field final TASKBOARD_AUTH_ID = "taskboardCredentials"
 @Field final SONAR_CREDENTIALS_ID = "sonarCredentials";
+@Field final NEXUS_CREDENTIALS_ID = "nexusCredentials";
 @Field final VERBOSE_REQUESTS = false;
 
 properties([disableConcurrentBuilds(),
@@ -407,6 +408,16 @@ def createSonarProjectAndGroup(projectName, projectKey, groupName) {
     sonarAddPermission(groupName, projectKey, "codeviewer");
 }
 
+def setupNexus(jiraKey) {
+    httpRequest acceptType: 'APPLICATION_JSON', contentType: 'TEXT_PLAIN', authentication: NEXUS_CREDENTIALS_ID,
+                httpMode: 'POST', url: "${NexusHostUrl}/service/siesta/rest/v1/script/setupsdlc/run",
+                requestBody: asJson([
+                    jiraKey: jiraKey,
+                    repoName: 'jenkins'
+                ]), 
+                consoleLogResponseBody: VERBOSE_REQUESTS
+}
+
 def updateTemplateVariables(templateName, varMap) {
     def txt = readFile file: templateName;
     for (e in varMap) {
@@ -666,11 +677,15 @@ node ("master"){
             jiraCustomersList);
     }
 
-    stage("Setting up project permission scheme on Jenkins") {
+    stage("Jenkins project permission scheme setup") {
         setupPermissionRoles(JiraKey);
     }
 
-    stage("Sonar project and group creation") {
+    stage("Sonar project permission scheme setup") {
         createSonarProjectAndGroup(JiraProjectName, GithubRepoName, JiraKey);
+    }
+
+    stage("Nexus project permission scheme setup") {
+        setupNexus(JiraKey);
     }
 }

@@ -9,7 +9,7 @@ Usage:
 Request:
 - Method: POST
 - Header: Content-Type: text/plain
-- URL: $NEXUS_URL/service/siesta/rest/v1/script/setupauth/run
+- URL: $NEXUS_URL/service/siesta/rest/v1/script/setupsdlc/run
 - Payload: {"jiraKey":"JIRA_KEY", "repo": "NAME_OF_REPO_TO_APPLY VISIBILITY RULE"}
 
 After the request is executed, a user given the role JIRA_KEY, will have access to all artifacts matching repo:$JIRA_KEY/*
