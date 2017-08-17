@@ -302,18 +302,18 @@ def createDashingConfiguration(jiraKey, githubUser, githubPassword, githubRepoNa
 
 def updateTaskboardConfiguration(jiraKey, leaderJiraName, administrators, developers, customers) {
     def wipConfigurations = [
-        {
+        [
             statusId: 11818,
             wip: 2
-        },
-        {
+        ],
+        [
             statusId: 11826,
             wip: 2
-        },
-        {
+        ],
+        [
             statusId: 11825,
             wip: 2
-        }
+        ]
     ];
 
     httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', authentication: TASKBOARD_AUTH_ID,
@@ -322,16 +322,16 @@ def updateTaskboardConfiguration(jiraKey, leaderJiraName, administrators, develo
                     projectKey: JiraKey,
                     teamLeader: leaderJiraName,
                     teams: [
-                        {
+                        [
                             name: "${JiraKey}_DEV",
                             members: getAllUniqueValues(leaderJiraName + administrators + developers),
                             wipConfigurations: wipConfigurations
-                        },
-                        {
+                        ],
+                        [
                             name: "${JiraKey}_CUSTOMER",
                             members: getAllUniqueValues(customers),
                             wipConfigurations: wipConfigurations
-                        }
+                        ]
                     ]
                 ]),
                 consoleLogResponseBody: VERBOSE_REQUESTS
