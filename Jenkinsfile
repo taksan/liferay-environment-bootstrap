@@ -292,7 +292,7 @@ def createDashingConfiguration(jiraKey, githubUser, githubPassword, githubRepoNa
         project: jiraKey,
         'github-user': githubUser,
         'github-password': githubPassword,
-        'github-reponame': githubRepoName,
+        'github-reponame': "${GithubOrganization}/${githubRepoName}",
         'time-zone': timeZone
     ])
     
