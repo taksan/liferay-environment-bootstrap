@@ -292,7 +292,7 @@ def createDashingConfiguration(jiraKey, githubUser, githubPassword, githubRepoNa
         project: jiraKey,
         'github-user': githubUser,
         'github-password': githubPassword,
-        'github-reponame': githubRepoName,
+        'github-reponame': "${GithubOrganization}/${githubRepoName}",
         'time-zone': timeZone
     ])
     
@@ -427,7 +427,7 @@ def createSonarProjectAndGroup(projectName, projectKey, groupName) {
 
 def setupNexus(jiraKey) {
     httpRequest acceptType: 'APPLICATION_JSON', contentType: 'TEXT_PLAIN', authentication: NEXUS_CREDENTIALS_ID,
-                httpMode: 'POST', url: "${NexusHostUrl}/service/siesta/rest/v1/script/setupsdlc/run",
+                httpMode: 'POST', url: "${NEXUS_END_POINT}/service/siesta/rest/v1/script/setupsdlc/run",
                 requestBody: asJson([
                     jiraKey: jiraKey,
                     repoName: 'jenkins'
@@ -617,6 +617,9 @@ node ("master"){
 
         if (env.SONAR_END_POINT == null)
             error("You must set SONAR_END_POINT in the global properties");
+
+        if (env.NEXUS_END_POINT == null)
+            error("You must set NEXUS_END_POINT in the global properties");
 
         if (isEmpty(ProjectOwner)) 
             error("You must provide the project owner ${ProjectOwner}")
