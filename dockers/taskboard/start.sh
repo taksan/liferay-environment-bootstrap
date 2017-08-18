@@ -16,4 +16,4 @@ cp $TASKBOARD_DATA/taskboard.log $TASKBOARD_DATA/taskboard.log.$TS
 
 WAR_PATH=$(pwd)
 cd $TASKBOARD_DATA
-java -cp $TASKBOARD_DATA:$WAR_PATH/taskboard.war org.springframework.boot.loader.WarLauncher --server.port=8082 | tee  $TASKBOARD_DATA/taskboard.log
+java $TASKBOARD_XMX_XMS -cp $TASKBOARD_DATA:$WAR_PATH/taskboard.war org.springframework.boot.loader.WarLauncher --server.port=8082 | tee  $TASKBOARD_DATA/taskboard.log
