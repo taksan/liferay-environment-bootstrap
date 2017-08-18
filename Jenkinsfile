@@ -361,7 +361,7 @@ def sonarRequest(serviceEndpoint, mode, parameters) {
 }
 
 def sonarGetAllProjects() {
-    resp = sonarRequest("api/components/search", "GET", [qualifiers: "TRK", ps: "499"]);
+    resp = sonarRequest("/api/components/search", "GET", [qualifiers: "TRK", ps: "499"]);
     if (resp.status >= 400)
         error(resp.content);
     return asObject(resp.content).components;
@@ -380,7 +380,7 @@ def sonarProjectExists(projectKey) {
 }
 
 def sonarCreateProject(projectName, projectKey) {
-    resp = sonarRequest("api/projects/create", "POST", [name: projectName, project: projectKey]);
+    resp = sonarRequest("/api/projects/create", "POST", [name: projectName, project: projectKey]);
     if (resp.status >= 400)
         error(resp.content);
     println "Sonar Project '${projectKey}' created:";
@@ -389,7 +389,7 @@ def sonarCreateProject(projectName, projectKey) {
 }
 
 def sonarGetAllGroups() {
-    resp = sonarRequest("api/user_groups/search", "GET", [ps: "499"]);
+    resp = sonarRequest("/api/user_groups/search", "GET", [ps: "499"]);
     if (resp.status >= 400)
         error(resp.content);
     return asObject(resp.content).groups;
@@ -408,7 +408,7 @@ def sonarGroupExists(groupName) {
 }
 
 def sonarCreateGroup(groupName, groupDescription) {
-    resp = sonarRequest("api/user_groups/create", "POST", [name: groupName, description: groupDescription]);
+    resp = sonarRequest("/api/user_groups/create", "POST", [name: groupName, description: groupDescription]);
     if (resp.status >= 400)
         error(resp.content);
     println "Sonar Group '${groupName}' created:";
@@ -417,7 +417,7 @@ def sonarCreateGroup(groupName, groupDescription) {
 }
 
 def sonarAddPermission(groupName, projectKey, permission) {
-    resp = sonarRequest("api/permissions/add_group", "POST", [projectKey: projectKey, permission: permission, groupName: groupName]);
+    resp = sonarRequest("/api/permissions/add_group", "POST", [projectKey: projectKey, permission: permission, groupName: groupName]);
     if (resp.status >= 400)
         error(resp.content);
     println "Sonar Permission '${permission}' added to Group ${groupName} for Project ${projectKey}:";
