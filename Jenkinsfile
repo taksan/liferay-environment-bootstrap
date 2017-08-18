@@ -430,7 +430,7 @@ def setupNexus(jiraKey) {
                 httpMode: 'POST', url: "${NEXUS_END_POINT}/service/siesta/rest/v1/script/setupsdlc/run",
                 requestBody: asJson([
                     jiraKey: jiraKey,
-                    repoName: 'jenkins'
+                    repoName: 'jenkins-build'
                 ]), 
                 consoleLogResponseBody: VERBOSE_REQUESTS
 }
