@@ -301,6 +301,14 @@ def createDashingConfiguration(jiraKey, githubUser, githubPassword, githubRepoNa
 }
 
 def updateTaskboardConfiguration(jiraKey, leaderJiraName, administrators, developers, customers) {
+    def List<String> devTeamMembers = new ArrayList<String>();
+    devTeamMembers.add(leaderJiraName);
+    devTeamMembers.addAll(administrators);
+    devTeamMembers.addAll(developers);
+
+    def List<String> customerTeamMembers = new ArrayList<String>();
+    customerTeamMembers.addAll(customers);
+
     def wipConfigurations = [
         [
             statusId: 11818,
@@ -324,12 +332,12 @@ def updateTaskboardConfiguration(jiraKey, leaderJiraName, administrators, develo
                     teams: [
                         [
                             name: "${JiraKey}_DEV",
-                            members: getAllUniqueValues(leaderJiraName + administrators + developers),
+                            members: getAllUniqueValues(devTeamMembers),
                             wipConfigurations: wipConfigurations
                         ],
                         [
                             name: "${JiraKey}_CUSTOMER",
-                            members: getAllUniqueValues(customers),
+                            members: getAllUniqueValues(customerTeamMembers),
                             wipConfigurations: wipConfigurations
                         ]
                     ]
