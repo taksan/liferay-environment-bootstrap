@@ -43,7 +43,7 @@ def projectPrivProperties = ImmutableMap.builder()
 def projectPrivilege = new org.sonatype.nexus.security.privilege.Privilege(
     id: "jenkins-${jiraKey}-priv",
     version: '',
-    name: "_sdlc-${jiraKey}-priv",
+    name: "auto_sdlc-${jiraKey}-priv",
     description: "${jiraKey} Content Selector privilege",
     type: "repository-content-selector",
     properties: projectPrivProperties
