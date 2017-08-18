@@ -507,7 +507,7 @@ def getAllUniqueValues(arrayToAdd) {
                 unique.add(value);
         }
     }
-    return !isEmptyArray(unique) ? unique : null;
+    return !isEmptyArray(unique) ? unique : [];
 }
 
 def existsInArray(array, toCompare) {
