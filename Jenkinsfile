@@ -287,12 +287,12 @@ def githubRequest(serviceEndpoint, mode, json) {
     return resp;                    
 }
 
-def createDashingConfiguration(jiraKey, githubUser, githubPassword, githubRepoName, timeZone) {
+def createDashingConfiguration(jiraKey, githubUser, githubPassword, githubOrganization, githubRepoName, timeZone) {
     def json = asJson([
         project: jiraKey,
         'github-user': githubUser,
         'github-password': githubPassword,
-        'github-reponame': "${GithubOrganization}/${githubRepoName}",
+        'github-reponame': "${githubOrganization}/${githubRepoName}",
         'time-zone': timeZone
     ])
     
@@ -601,6 +601,13 @@ def jenkinsTimeZoneId() {
     return tz.getID();
 }
 
+def getTimeZoneId() {
+    if (isEmpty(CustomTimeZone))
+        return jenkinsTimeZoneId();
+
+    return CustomTimeZone;
+}
+
 def isEmpty(s) {
     return s == null || "".equals(s)
 }
@@ -688,10 +695,8 @@ node ("master"){
             GithubUsername = credentials.getUsername();
             GithubPassword = credentials.getPassword().plainText;
         }
-        if (isEmpty(CustomTimeZone)) {
-            CustomTimeZone = jenkinsTimeZoneId();
-        }
-        createDashingConfiguration(JiraKey, GithubUsername, GithubPassword, GithubRepoName, CustomTimeZone);
+        createDashingConfiguration(JiraKey, GithubUsername, GithubPassword,
+            organization(), GithubRepoName, getTimeZoneId());
     }
 
     stage("Build server Slave setup") {
