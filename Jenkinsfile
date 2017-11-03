@@ -148,7 +148,7 @@ def createJiraProject(jiraKey, jiraName, description, lead, administrators, deve
 {
     def projectHardData =  [
         issueTypeScheme         : "20480",
-        workflowScheme          : "17180",
+        workflowScheme          : "18384",
         issueTypeScreenScheme   : "14450",
         fieldConfigurationScheme: "13600",
         permissionScheme        : "14070",
